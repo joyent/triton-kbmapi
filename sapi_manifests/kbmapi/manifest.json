@@ -1,0 +1,5 @@
+{
+	"name": "kbmapi",
+	"path": "/opt/smartdc/kbmapi/config.json",
+	"post_cmd": "svcadm restart kbmapi; svcadm restart kbmtr"
+}

@@ -1,0 +1,17 @@
+/node_modules
+/tmp
+/etc
+/cache/
+build
+/make_stamps
+docs/*.json
+docs/*.html
+cscope.in.out
+cscope.po.out
+cscope.out
+man
+coverage/*
+.nyc_output/*
+kbmapi.vim
+config.json
+smf/manifests/*.xml
