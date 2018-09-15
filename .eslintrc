@@ -1,0 +1,27 @@
+{
+    "plugins": [ "joyent" ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:joyent/style",
+        "plugin:joyent/lint"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "script",
+        "ecmaFeatures": {
+        }
+    },
+    "env": {
+        "node": true
+    },
+    "rules": {
+        // Lint:
+        "strict": [ "error", "global" ],
+
+        // Style:
+        "func-style": [ "error", "declaration" ],
+
+        // Checks disabled as things get slowly cleaned up:
+        "consistent-return": 1
+    }
+}

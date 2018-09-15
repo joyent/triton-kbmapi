@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+#
+# Copyright 2018, Joyent, Inc.
+#
+
+#
+# Rsync the master in this working copy to the install on the given HN.
+#
+
+#set -o xtrace
+set -o errexit
+
+TOP=$(cd $(dirname $0)/../; pwd)
+NODE=root@$1
+
+while [[ -z "$KBMAPI_ZONE" ]]; do
+    echo "Trying to get KBMAPI zone"
+    KBMAPI_ZONE=$(ssh $NODE "/opt/smartdc/bin/sdc-vmapi /vms?alias=kbmapi0" 2>/dev/null \
+        | json -H -c 'this.tags && this.tags.smartdc_role === "kbmapi"' \
+            -c 'this.state === "running"' 0.uuid)
+done
+echo "KBMAPI_ZONE: $KBMAPI_ZONE"
+
+extraOpts=
+if [[ $(uname -s) != "SunOS" ]]; then
+    extraOpts="--exclude *.node --exclude build"
+else
+    # Clean node_modules everytime.
+    ssh $NODE rm -rf /zones/$KBMAPI_ZONE/root/opt/smartdc/kbmapi/node_modules
+fi
+
+rsync -av ${TOP}/ \
+    $NODE:/zones/$KBMAPI_ZONE/root/opt/smartdc/kbmapi/ \
+    $extraOpts \
+    --exclude .git/ \
+    --exclude /etc/config.json \
+    --exclude /deps/ \
+    --exclude /docs/ \
+    --exclude /tools/ \
+    --exclude /tmp/
+
+state=$(ssh ${NODE} svcs -z ${KBMAPI_ZONE} -H -o state kbmapi)
+if [[ "$state" == "maintenance" ]]; then
+    ssh ${NODE} svcadm -z ${KBMAPI_ZONE} clear kbmapi
+else
+    ssh ${NODE} svcadm -z ${KBMAPI_ZONE} restart kbmapi
+fi
+ssh ${NODE} svcadm -z ${KBMAPI_ZONE} restart config-agent
