@@ -79,6 +79,8 @@ test('RecoveryConfigurationTransition model test', function setup(suite) {
                 t.ifError(createErr, 'Create Error');
                 t.ok(recCfgTr.params, 'recovery configuration tr params');
                 t.ok(recCfgTr.params.uuid, 'recovery configuration tr uuid');
+                t.equal(recCfgTr.params.forced, false,
+                    'recCfgTr no --force flag');
                 RCT_UUID = recCfgTr.params.uuid;
                 t.ok(recCfgTr.etag, 'recovery configuration etag');
                 ETAG = recCfgTr.etag;

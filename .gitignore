@@ -12,3 +12,4 @@ man
 smf/manifests/kbmapi.xml
 coverage/*
 kbmapi.vim
+config.json

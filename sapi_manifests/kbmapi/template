@@ -8,5 +8,9 @@
         "cueballOptions": {
             "resolvers": [ "{{{BINDER_SERVICE}}}" ]
         }
+    },
+    "cnapi": {
+        "maxSockets": 10,
+        "url": "http://{{{CNAPI_SERVICE}}}"
     }
 }

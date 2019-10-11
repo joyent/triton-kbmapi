@@ -18,8 +18,8 @@ const fs = require('fs');
 const path = require('path');
 const VError = require('verror');
 
-const mod_recovery_configuration = require(
-    '../../../lib/models/recovery-configuration');
+const models = require('../../../lib/models/');
+const mod_recovery_configuration = models.recovery_configuration;
 
 const mod_log = require('../../lib/log');
 const mod_server = require('../../lib/server');
@@ -46,7 +46,7 @@ test('RecoveryConfiguration model test', function setup(suite) {
         var ETAG;
 
         suite.test('Init kbmapi_recovery_configs bucket', function bucket(t) {
-            mod_recovery_configuration.init(moray, function initCb(err) {
+            models.init({ moray: moray }, function initCb(err) {
                 t.ifError(err, 'Init bucket error');
                 if (!err) {
                     BUCKET = true;
@@ -98,6 +98,15 @@ test('RecoveryConfiguration model test', function setup(suite) {
                 t.equal(recCfg.etag, ETAG, 'recovery configuration eTag');
                 t.end();
             });
+        });
+
+        suite.test('RecoveryConfiguration transition', function doTr(t) {
+            if (!UUID) {
+                t.comment('Skipping tests due to previous failure');
+                t.end();
+                return;
+            }
+            t.end();
         });
 
         suite.test('Update RecoveryConfiguration', function doUpdate(t) {

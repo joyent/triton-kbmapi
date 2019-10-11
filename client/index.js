@@ -374,8 +374,6 @@ function listRecoveryConfigurations(opts, cb) {
     });
 };
 
-// XXX No update for the moment
-
 /**
  * Gets the public information about a recovery configuration
  *
@@ -401,6 +399,56 @@ function getRecoveryConfiguration(opts, cb) {
 };
 
 
+/**
+ * Updates a recovery configuration
+ *
+ * @param {Object} opts object containing:
+ *      - {String} uuid: (required) the uuid of the recovery configuration.
+ *      - {String} action: (required) the transition to be performed by
+ *        the recovery configuration or 'cancel' to abort the current one
+ *        in progress.
+ *      - {String} pivtoken: (optional) the GUID of a PIVToken to be
+ *        activated standalone for testing purposes. Note this is valid
+ *        only when action === 'activate'
+ *      - {Boolean} force: (optional) required when we want to either use
+ *        a single PIVToken for activation, or when we want to activate
+ *        a given recovery configuration despite of some PIVTokens not being
+ *        staged for this configuration.
+ * @param {Function} cb: of the form f(err, recovery_configuration, res)
+ *
+ */
+KBMAPI.prototype.updateRecoveryConfiguration =
+function updateRecoveryConfiguration(opts, cb) {
+    assert.object(opts, 'opts');
+    assert.uuid(opts.uuid, 'opts.uuid');
+    assert.string(opts.action, 'opts.template');
+    assert.optionalString(opts.pivtoken, 'opts.pivtoken');
+    assert.optionalBool(opts.force, 'opts.force');
+    assert.func(cb, 'cb');
+
+    var data = {
+        action: opts.action
+    };
+
+    if (opts.force) {
+        data.force = opts.force;
+    }
+
+    if (opts.pivtoken) {
+        data.pivtoken = opts.pivtoken;
+    }
+
+    var reqOpts = Object.assign(opts, {
+        path: format('/recovery-configurations/%s', opts.uuid),
+        data: data,
+        method: 'PUT',
+        authRequired: false
+    });
+
+    this._request(reqOpts, function reqCb(err, req, res, body) {
+        cb(err, body, res);
+    });
+};
 /**
  * KBMAPI request wrapper - modeled after http.request.
  *
