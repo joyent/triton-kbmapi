@@ -224,7 +224,7 @@ encryption.
 API call to obtain its pin, should we still go ahead and store the data for
 the HN PIV token in KBMAPI?
 
-#### Preloading PIV tokens
+#### Preloading PIV tokens (TO-DO)
 
 To support an operator preloading unprovisioned PIV tokens, we track ranges of
 serial numbers that are allowed to be provisioned.  We use a separate
@@ -263,9 +263,9 @@ ca\_dn        | The distinguished name (DN) of the attestation CA for this PIV t
 comment       | An operator supplied free form comment.
 
 
-The `kbmadm` command is used to manage this data.
+The `kbmctl` command is used to manage this data.
 
-#### Audit Trail
+#### Audit Trail (TO-DO)
 
 Given the critical nature of the PIV token data, we want to provide an audit
 trail of activity.  While there is discussion of creating an AuditAPI at
@@ -424,6 +424,20 @@ number generator suitable for cryptographic purposes.
 
 Once the entry is updated or created in moray, a successful response is
 returned (201) and the generated recovery token is included in the response.
+
+Recovery Tokens may include some or all of the following fields:
+
+**Field**               | **Required** | **Description**
+------------------------|--------------|-----------------
+pivtoken                | Yes          | The GUID of the provisioned PIV token.
+token                   | Yes          | The encrypted recovery token which could be used for HMAC auth in case the PIVToken is not available.
+recovery\_configuration | Yes          | The UUID of the recovery configuration template to be used with the token.
+template                | No           | The template associated with the aforementioned recovery configuration. Included when a new recovery token is created in order to save some extra HTTP requests to /recovery-configurations. (As a rule regarding when to expect this field to be present: only for HTTP POST requests).
+created                 | Yes          | When this recovery token was created.
+staged                  | No           | When this recovery token was staged. This information will be updated by cn-agent in KBMAPI once the recovery configuration associated with this recovery token has been staged into the CN.
+activated               | No           | When this recovery token was activated. This information will be update by cn-agent in KBMAPI when the recovery configuration associated with the token has been activated into the CN. We only care about the "active" recovery token, where activated is set and "expired" is not.
+expired                 | No           | When this recovery token was expired. Usually associated to the fact that another recovery token has been activated.
+
 
 Example request (with attestation)
 

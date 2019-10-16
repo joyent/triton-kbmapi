@@ -25,7 +25,7 @@ const mod_token = require('../../lib/token');
 const mod_server = require('../../lib/server');
 const test = require('tape');
 
-// TODO: Replace this when recovery-configuration endpoint is ready:
+// TODO: Replace this when recovery-configuration endpoint is complete:
 const models = require('../../../lib/models');
 const mod_recovery_configuration = models.recovery_configuration;
 
@@ -121,7 +121,7 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ifError(createErr, 'Create Error');
             t.ok(recCfg.params, 'recovery configuration params');
             t.ok(recCfg.params.uuid, 'recovery configuration uuid');
-            RECOVERY_CONFIG = recCfg.params.uuid;
+            RECOVERY_CONFIG = recCfg;
             t.end();
         });
     });
@@ -208,7 +208,7 @@ test('Initial setup', function tInitialSetup(suite) {
             t.test('Create token GUID ' + aToken.guid, function doCreate(t3) {
                 mod_token.create(t3, {
                     params: Object.assign({}, aToken, {
-                        recovery_configuration: RECOVERY_CONFIG
+                        recovery_configuration: RECOVERY_CONFIG.params.uuid
                     }),
                     exp: aToken,
                     privkey: aKey
@@ -237,6 +237,7 @@ test('Initial setup', function tInitialSetup(suite) {
 
     suite.test('Re-create pivtoken with valid privkey', function privKeyOk(t) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
+        delete tk.recovery_tokens[0].template;
         mod_token.create(t, {
             params: tk,
             exp: tk,
@@ -280,6 +281,7 @@ test('Initial setup', function tInitialSetup(suite) {
 
     suite.test('Get pivtoken with pin', function tGetTokenPin(t) {
         var tok = TOKENS[1];
+        delete tok.recovery_tokens[0].template;
 
         mod_token.getPin(t, {
             params: {
@@ -374,7 +376,7 @@ test('Initial setup', function tInitialSetup(suite) {
         CLIENT.createToken({
             guid: tk.guid,
             token: Object.assign({}, tk, {
-                recovery_configuration: RECOVERY_CONFIG
+                recovery_configuration: RECOVERY_CONFIG.params.uuid
             }),
             pivytool: pivytool
         }, function createTkCb(err, body, response) {
@@ -387,7 +389,7 @@ test('Initial setup', function tInitialSetup(suite) {
             CLIENT.createToken({
                 guid: tk.guid,
                 token: Object.assign({}, tk, {
-                    recovery_configuration: RECOVERY_CONFIG
+                    recovery_configuration: RECOVERY_CONFIG.params.uuid
                 }),
                 pivytool: pivytool
             }, function reCreateTkCb(err2, body2, response2) {
@@ -422,7 +424,7 @@ test('Initial setup', function tInitialSetup(suite) {
                 guid: TOKENS[1].guid,
                 recovery_token: RECOVERY_TOKEN,
                 token: Object.assign({}, OTHER_TOKEN, {
-                    recovery_configuration: RECOVERY_CONFIG
+                    recovery_configuration: RECOVERY_CONFIG.params.uuid
                 })
             },
             exp: OTHER_TOKEN

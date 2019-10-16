@@ -669,6 +669,12 @@ KbmApiTransitioner.prototype.run = function (cb) {
                         self.log.debug({
                             val: val
                         }, 'doBatch batchCb');
+                        // FIXME:
+                        // Not necessarily should use etag here. In fact, should
+                        // stop using, b/c a parallel request could cancel the
+                        // transition and we should stop before processing the
+                        // next batch. On such case, we should return an error
+                        // and exit the batches run.
                         models.recovery_configuration_transition.update({
                             moray: self.moray,
                             key: ctx.currTr.key(),
