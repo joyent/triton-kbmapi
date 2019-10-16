@@ -17,7 +17,6 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-// So linter doesn't complain b/c I do have it around and not used for now.
 const util = require('util');
 
 
@@ -25,21 +24,29 @@ const UUID = require('node-uuid');
 const vasync = require('vasync');
 
 const h = require('../helpers');
+const mod_log = require('../../lib/log');
 const mod_server = require('../../lib/server');
+const mocks = require('../../lib/mocks');
+const KbmApiTransitioner = require('../../../transitioner').KbmApiTransitioner;
 const test = require('tape');
 
 const eboxTpl = fs.readFileSync(path.resolve(
     __dirname, '../../backup'), 'ascii');
 
+
+const log_child = mod_log.child({
+    component: 'test-server'
+});
+
 var KBMAPI;
 var MORAY;
 var CLIENT;
 var RECOVERY_CONFIG;
-
+var TRANSITIONER;
 
 var targets = [];
 var i = 0;
-while (i < 20) {
+while (i < 25) {
     targets.push(UUID.v4());
     i += 1;
 }
@@ -58,6 +65,24 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ok(CLIENT, 'client');
             t.end();
         });
+    });
+
+    suite.test('Create transitioner', function (t) {
+        TRANSITIONER = new KbmApiTransitioner({
+            moray: MORAY,
+            cnapi: new mocks.cnapi(MORAY),
+            log: log_child,
+            config: {
+                instanceUuid: 'dc7cdc64-f03d-4e74-b710-0e9f174918e9'
+            }
+        });
+        TRANSITIONER.on('initialized', function started() {
+            // Run transitions.
+            // Then stop the transitioner until something else makes it
+            // run again.
+            t.end();
+        });
+        TRANSITIONER.start();
     });
 
     suite.test('Create RecoveryConfiguration', function doCreate(t) {
@@ -86,7 +111,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Create 20 PIVTokens', function doPIVTokens(t) {
+    suite.test('Create 25 PIVTokens', function doPIVTokens(t) {
         vasync.forEachParallel({
             func: function createPIVToken(arg, next) {
                 const GUID = crypto.randomBytes(16).toString('hex')
@@ -133,6 +158,14 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    suite.test('Run not yet existing stage transition', function (t) {
+        TRANSITIONER.run(function runCb(runErr, pendingTrs) {
+            t.ifError(runErr, 'unexpected transitioner err');
+            t.notOk(pendingTrs, 'should not be pending transtions');
+            t.end();
+        });
+    });
+
     suite.test('Stage recovery configuration', function doStage(t) {
         CLIENT.updateRecoveryConfiguration({
             uuid: RECOVERY_CONFIG.uuid,
@@ -173,6 +206,14 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    suite.test('Run canceled stage transition', function (t) {
+        TRANSITIONER.run(function runCb(runErr, pendingTrs) {
+            t.ifError(runErr, 'unexpected transitioner err');
+            t.notOk(pendingTrs, 'should not be pending transtions');
+            t.end();
+        });
+    });
+
     suite.test('Re-stage recovery configuration', function doReStage(t) {
         CLIENT.updateRecoveryConfiguration({
             uuid: RECOVERY_CONFIG.uuid,
@@ -189,6 +230,14 @@ test('Initial setup', function tInitialSetup(suite) {
                 res.headers['location'],
                 'location header'
             );
+            t.end();
+        });
+    });
+
+    suite.test('Run stage transition', function (t) {
+        TRANSITIONER.run(function runCb(runErr, runRes) {
+            console.log(util.inspect(runErr, false, 8, true));
+            console.log(util.inspect(runRes, false, 8, true));
             t.end();
         });
     });
@@ -248,7 +297,9 @@ test('Initial setup', function tInitialSetup(suite) {
 
 test('Stop server', function closeServers(t) {
     KBMAPI.server.close();
-    mod_server.close(t);
+    TRANSITIONER.stop(function () {
+        mod_server.close(t);
+    });
 });
 
 // vim: set softtabstop=4 shiftwidth=4:

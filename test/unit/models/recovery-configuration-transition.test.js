@@ -143,7 +143,6 @@ test('RecoveryConfigurationTransition model test', function setup(suite) {
                 moray: moray,
                 key: RCT_UUID,
                 val: {
-                    wip: targets.slice(0, 5),
                     taskids: taskids.slice(0, 5),
                     started: new Date().toISOString(),
                     locked_by: UUID.v4()
@@ -168,7 +167,6 @@ test('RecoveryConfigurationTransition model test', function setup(suite) {
                 key: RCT_UUID,
                 val: {
                     completed: targets.slice(0, 5),
-                    wip: targets.slice(5, 10),
                     taskids: taskids.slice(5, 10)
                 },
                 etag: ETAG
@@ -193,7 +191,6 @@ test('RecoveryConfigurationTransition model test', function setup(suite) {
                 key: RCT_UUID,
                 val: {
                     completed: targets.slice(0, 5),
-                    wip: targets.slice(5, 10),
                     taskids: taskids.slice(5, 10)
                 },
                 etag: ETAG
@@ -218,7 +215,6 @@ test('RecoveryConfigurationTransition model test', function setup(suite) {
                 key: RCT_UUID,
                 val: {
                     completed: targets,
-                    wip: [],
                     taskids: taskids,
                     finished: new Date().toISOString(),
                     locked_by: null
