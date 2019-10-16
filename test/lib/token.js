@@ -185,7 +185,7 @@ function deleteToken(t, opts, callback) {
         common.afterAPIdelete.bind(null, t, opts, callback));
 }
 
-function recoverToken(t, opts, callback) {
+function replaceToken(t, opts, callback) {
     common.assertArgs(t, opts, callback);
     var client = opts.client || mod_client.get();
     var guid = opts.params.guid;
@@ -207,7 +207,7 @@ function recoverToken(t, opts, callback) {
         recoverOpts.recovery_token = params.recovery_token;
     }
 
-    client.recoverToken(recoverOpts,
+    client.replaceToken(recoverOpts,
         common.afterAPIcall.bind(null, t, opts, callback));
 }
 
@@ -218,7 +218,7 @@ module.exports = {
     get: getToken,
     getPin: getTokenPin,
     list: listTokens,
-    recover: recoverToken
+    recover: replaceToken
 };
 
 // vim: set softtabstop=4 shiftwidth=4:

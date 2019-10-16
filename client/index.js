@@ -169,7 +169,7 @@ KBMAPI.prototype.createToken = function createToken(opts, cb) {
  * @param {Function} cb: of the form f(err, token, res)
  *
  */
-KBMAPI.prototype.recoverToken = function recoverToken(opts, cb) {
+KBMAPI.prototype.replaceToken = function replaceToken(opts, cb) {
     assert.object(opts, 'opts');
     assert.string(opts.guid, 'opts.guid');
     assert.string(opts.recovery_token, 'opts.recovery_token');
@@ -177,7 +177,7 @@ KBMAPI.prototype.recoverToken = function recoverToken(opts, cb) {
     assert.func(cb, 'cb');
 
     var reqOpts = Object.assign(opts, {
-        path: '/pivtokens/' + opts.guid + '/recover',
+        path: '/pivtokens/' + opts.guid + '/replace',
         data: {
             token: opts.token
         },
