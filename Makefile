@@ -37,7 +37,7 @@ ESLINT		= ./node_modules/.bin/eslint
 # Configuration used by Makefile.smf.defs to generate "check" and "all" targets
 # for SMF manifest files.
 #
-SMF_MANIFESTS_IN	= smf/manifests/kbmapi.xml.in
+SMF_MANIFESTS_IN	= smf/manifests/kbmapi.xml.in smf/manifests/kbmtr.xml.in
 
 #
 # Makefile.defs defines variables used as part of the build process.
@@ -108,6 +108,7 @@ release: check all $(SMF_MANIFESTS)
 	@mkdir -p $(RELSTAGEDIR)/site
 	@touch $(RELSTAGEDIR)/site/.do-not-delete-me
 	cp -r $(ROOT)/server.js \
+		$(ROOT)/transitioner.js \
 		$(ROOT)/lib \
 		$(ROOT)/node_modules \
 		$(ROOT)/package.json \

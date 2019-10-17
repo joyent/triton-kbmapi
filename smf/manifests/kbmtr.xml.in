@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<!--
+    Copyright 2019 Joyent, Inc.
+-->
+
+<!--
+    Key Backup and Management Transition Daemon SMF manifest
+ -->
+
+<service_bundle type="manifest" name="kbmtr">
+<service name="smartdc/application/kbmtr" type="service" version="1">
+
+<dependency name="network" grouping="require_all" restart_on="error" type="service">
+	<service_fmri value="svc:/network/physical" />
+</dependency>
+<dependency name="filesystem" grouping="require_all" restart_on="error" type="service">
+	<service_fmri value="svc:/system/filesystem/local" />
+</dependency>
+<dependency name="kbmapi" grouping="require_all" restart_on="error" type="service">
+        <service_fmri value="svc:/smartdc/application/kbmapi" />
+</dependency>
+
+<exec_method type="method" name="start" exec="/opt/smartdc/kbmapi/sbin/kbmtrd &amp;" timeout_seconds="30" />
+<exec_method type="method" name="stop" exec=":kill" timeout_seconds="30" />
+
+<instance name="default" enabled="true" />
+
+<stability value='Unstable' />
+
+<template>
+	<common_name><loctext xml:lang="C">Joyent Key Backup and Management Recovery Configuration Transition Service</loctext></common_name>
+</template>
+
+</service>
+</service_bundle>

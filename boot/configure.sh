@@ -7,7 +7,7 @@
 #
 
 #
-# Copyright 2018, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -19,4 +19,9 @@ echo "Importing kbmapi SMF manifest"
 echo "Enabling kbmapi service"
 /usr/sbin/svcadm enable smartdc/application/kbmapi
 
+echo "Importing kbmtr SMF manifest"
+/usr/sbin/svccfg import /opt/smartdc/kbmapi/smf/manifests/kbmtr.xml
+
+echo "Enabling kbmtr service"
+/usr/sbin/svcadm enable smartdc/application/kbmtr
 exit 0
