@@ -26,6 +26,7 @@ const vasync = require('vasync');
 const h = require('../helpers');
 const mod_log = require('../../lib/log');
 const mod_server = require('../../lib/server');
+const models = require('../../../lib/models');
 const mocks = require('../../lib/mocks');
 const KbmApiTransitioner = require('../../../transitioner').KbmApiTransitioner;
 const test = require('tape');
@@ -43,6 +44,7 @@ var MORAY;
 var CLIENT;
 var RECOVERY_CONFIG;
 var TRANSITIONER;
+var PIVTOKENS_CACHE = [];
 
 var targets = [];
 var i = 0;
@@ -138,6 +140,7 @@ test('Initial setup', function tInitialSetup(suite) {
                     t.equal(response.statusCode, 201,
                         'create token response code');
                     t.ok(body, 'create token body');
+                    PIVTOKENS_CACHE.push(body);
                     next(err);
                 });
             },
@@ -236,23 +239,81 @@ test('Initial setup', function tInitialSetup(suite) {
 
     suite.test('Run stage transition', function (t) {
         TRANSITIONER.run(function runCb(runErr, runRes) {
-            console.log(util.inspect(runErr, false, 8, true));
-            console.log(util.inspect(runRes, false, 8, true));
+            t.ifError(runErr, 'transitioner run error');
+            t.equal(runRes.length, 0, 'transitioner run results');
             t.end();
         });
     });
 
     suite.test('Activate single PIVToken', function doActivateOne(t) {
-        t.comment('Pending');
-        // we need to modify several things here so we can move ahead
-        t.end();
+        CLIENT.updateRecoveryConfiguration({
+            uuid: RECOVERY_CONFIG.uuid,
+            action: 'activate',
+            pivtoken: PIVTOKENS_CACHE[0].guid,
+            force: true
+        }, function (err, body, res) {
+            t.ifError(err, 'activate error');
+            t.ok(Object.keys(body).length === 0, 'no transition response body');
+            t.equal(204, res.statusCode, 'activate status code');
+            t.equal(
+                util.format(
+                    '/recovery-configurations/%s?action=watch&' +
+                    'transition=activate',
+                    RECOVERY_CONFIG.uuid
+                ),
+                res.headers['location'],
+                'location header'
+            );
+            t.end();
+        });
+    });
+
+    suite.test('Run activate PIVToken transition', function (t) {
+        TRANSITIONER.run(function runCb(runErr, runRes) {
+            t.ifError(runErr, 'transitioner run error');
+            t.equal(runRes.length, 0, 'transitioner run results');
+            t.end();
+        });
+    });
+
+    suite.test('Verify token', function doVerify(t) {
+        // The recovery token should be active now, but the configuration
+        // should remain staged b/c we activated a single pivtoken:
+        models.recovery_token.ls({
+            moray: MORAY,
+            log: log_child,
+            params: {
+                filter: util.format(
+                    '(&(recovery_configuration=%s)(activated=*))',
+                    RECOVERY_CONFIG.uuid)
+            }
+        }, function lsCb(lsErr, lsTk) {
+            t.ifErr(lsErr, 'list tokens error');
+            t.ok(lsTk, 'list token');
+            t.equal(lsTk.length, 1, 'token is active');
+            t.end();
+        });
     });
 
     suite.test('Activate recovery configuration', function doActivate(t) {
-        t.comment('Pending');
-        // we need to modify several things here so we can move ahead
-        // or can also modify progressively and watch twice or more
-        t.end();
+        CLIENT.updateRecoveryConfiguration({
+            uuid: RECOVERY_CONFIG.uuid,
+            action: 'activate'
+        }, function (err, body, res) {
+            t.ifError(err, 'activate error');
+            t.ok(Object.keys(body).length === 0, 'no transition response body');
+            t.equal(204, res.statusCode, 'activate status code');
+            t.equal(
+                util.format(
+                    '/recovery-configurations/%s?action=watch&' +
+                    'transition=activate',
+                    RECOVERY_CONFIG.uuid
+                ),
+                res.headers['location'],
+                'location header'
+            );
+            t.end();
+        });
     });
 
     suite.test('Watch recovery configuration', function doWatch(t) {
@@ -261,16 +322,101 @@ test('Initial setup', function tInitialSetup(suite) {
         t.end();
     });
 
+    suite.test('Run activate transition', function (t) {
+        TRANSITIONER.run(function runCb(runErr, runRes) {
+            t.ifError(runErr, 'transitioner run error');
+            t.equal(runRes.length, 0, 'transitioner run results');
+            t.end();
+        });
+    });
+
+    suite.test('Verify tokens', function doVerify(t) {
+        models.recovery_token.ls({
+            moray: MORAY,
+            log: log_child,
+            params: {
+                filter: util.format(
+                    '(&(recovery_configuration=%s)(activated=*))',
+                    RECOVERY_CONFIG.uuid)
+            }
+        }, function lsCb(lsErr, lsTk) {
+            t.ifErr(lsErr, 'list tokens error');
+            t.ok(lsTk, 'list tokens');
+            t.equal(lsTk.length, targets.length, 'tokens are active');
+            t.end();
+        });
+    });
+
     suite.test('Expire recovery configuration', function doExpire(t) {
-        t.comment('Pending');
-        // body...
-        t.end();
+        CLIENT.updateRecoveryConfiguration({
+            uuid: RECOVERY_CONFIG.uuid,
+            action: 'expire'
+        }, function (err, body, res) {
+            t.ifError(err, 'activate error');
+            t.ok(Object.keys(body).length === 0, 'no transition response body');
+            t.equal(204, res.statusCode, 'activate status code');
+            CLIENT.getRecoveryConfiguration({
+                uuid: RECOVERY_CONFIG.uuid
+            }, function getCb(getErr, cfg) {
+                t.ifError(getErr, 'recovery configuration error');
+                t.ok(cfg.expired, 'recovery configuration is expired');
+                t.end();
+            });
+        });
+    });
+
+    suite.test('Verify tokens', function doVerify(t) {
+        models.recovery_token.ls({
+            moray: MORAY,
+            log: log_child,
+            params: {
+                filter: util.format(
+                    '(&(recovery_configuration=%s)(expired=*))',
+                    RECOVERY_CONFIG.uuid)
+            }
+        }, function lsCb(lsErr, lsTk) {
+            t.ifErr(lsErr, 'list tokens error');
+            t.ok(lsTk, 'list tokens');
+            t.equal(lsTk.length, targets.length, 'tokens are expired');
+            t.end();
+        });
     });
 
     suite.test('Reactivate recovery configuration', function doReactivate(t) {
-        t.comment('Pending');
-        // body...
-        t.end();
+        CLIENT.updateRecoveryConfiguration({
+            uuid: RECOVERY_CONFIG.uuid,
+            action: 'reactivate'
+        }, function (err, body, res) {
+            t.ifError(err, 'activate error');
+            t.ok(Object.keys(body).length === 0, 'no transition response body');
+            t.equal(204, res.statusCode, 'activate status code');
+            CLIENT.getRecoveryConfiguration({
+                uuid: RECOVERY_CONFIG.uuid
+            }, function getCb(getErr, cfg) {
+                t.ifError(getErr, 'recovery configuration error');
+                t.notOk(cfg.expired, 'recovery configuration is not expired');
+                t.notOk(cfg.activated, 'recovery config is not activated');
+                t.notOk(cfg.staged, 'recovery configuration is not staged');
+                t.end();
+            });
+        });
+    });
+
+    suite.test('Verify tokens', function doVerify(t) {
+        models.recovery_token.ls({
+            moray: MORAY,
+            log: log_child,
+            params: {
+                filter: util.format(
+                    '(&(recovery_configuration=%s)(expired=*))',
+                    RECOVERY_CONFIG.uuid)
+            }
+        }, function lsCb(lsErr, lsTk) {
+            t.ifErr(lsErr, 'list tokens error');
+            t.ok(lsTk, 'list tokens');
+            t.equal(lsTk.length, 0, 'tokens are just created');
+            t.end();
+        });
     });
 
     suite.test('Delete RecoveryConfiguration', function doDel(t) {

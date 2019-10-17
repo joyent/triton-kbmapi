@@ -341,10 +341,10 @@ test('FSM Transition test', function setup(suite) {
                 moray: moray,
                 log: log_child,
                 action: 'activate',
-                force: true,
                 params: {
                     recoveryConfiguration: REC_CFG,
-                    targets: [targets[0]]
+                    targets: [targets[0]],
+                    force: true
                 }
             }, function trCb(trErr, trRes) {
                 t.ifError(trErr, 'Activate single CN error');
@@ -358,8 +358,8 @@ test('FSM Transition test', function setup(suite) {
                 moray: moray,
                 log: log_child,
                 action: 'activate',
-                force: true,
                 params: {
+                    force: true,
                     recoveryConfiguration: REC_CFG,
                     targets: [targets[1]]
                 }

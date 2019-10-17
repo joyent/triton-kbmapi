@@ -102,7 +102,6 @@ FakeCnapiClient.prototype.post = function (uuid, params, cb) {
         if (upErr) {
             console.error(upErr);
         }
-        console.log(util.inspect(_upRes, false, 8, true));
         cb(null, task);
     });
 };
