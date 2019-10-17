@@ -669,17 +669,10 @@ KbmApiTransitioner.prototype.run = function (cb) {
                         self.log.debug({
                             val: val
                         }, 'doBatch batchCb');
-                        // FIXME:
-                        // Not necessarily should use etag here. In fact, should
-                        // stop using, b/c a parallel request could cancel the
-                        // transition and we should stop before processing the
-                        // next batch. On such case, we should return an error
-                        // and exit the batches run.
                         models.recovery_configuration_transition.update({
                             moray: self.moray,
                             key: ctx.currTr.key(),
-                            val: val,
-                            etag: ctx.currTr.etag
+                            val: val
                         }, function upCb(upErr, upTr) {
                             if (upErr) {
                                 nextBatch(upErr);
@@ -692,6 +685,15 @@ KbmApiTransitioner.prototype.run = function (cb) {
                                 pending: ctx.pendingTargets
                             }, 'doBatch');
 
+                            if (upTr.params.aborted) {
+                                next(VError({
+                                    name: 'AlreadyDoneError',
+                                    info: {
+                                        'errno': 'ERRDONE'
+                                    }
+                                }, 'Transition finished'));
+                                return;
+                            }
                             // Refresh ETAG:
                             ctx.currTr = upTr;
                             nextBatch();
@@ -716,6 +718,62 @@ KbmApiTransitioner.prototype.run = function (cb) {
                 }
 
                 vasync.forEachPipeline({inputs: batches, func: doBatch}, next);
+            },
+
+            function completeTransition(ctx, next) {
+                var val = {
+                    finished: new Date().toISOString()
+                };
+                models.recovery_configuration_transition.update({
+                    moray: self.moray,
+                    key: ctx.currTr.key(),
+                    val: val
+                }, function upCb(upErr, upTr) {
+                    if (upErr) {
+                        next(upErr);
+                        return;
+                    }
+                    ctx.currTr = upTr;
+                    next();
+                });
+            },
+
+            function changeRecoveryConfigurationState(ctx, next) {
+                if (ctx.currTr.params.standalone) {
+                    next();
+                    return;
+                }
+                var val = {};
+                var del = false;
+
+                switch (ctx.currTr.params.name) {
+                    case 'stage':
+                        val.staged = new Date().toISOString();
+                        break;
+                    case 'activate':
+                        val.activated = new Date().toISOString();
+                        break;
+                    case 'deactivate':
+                        val.activated = new Date().toISOString();
+                        del = true;
+                        break;
+                    default:
+                        val.staged = new Date().toISOString();
+                        del = true;
+                        break;
+                }
+                models.recovery_configuration.update({
+                    moray: self.moray,
+                    key: ctx.recoveryConfig.key(),
+                    val: val,
+                    remove: del
+                }, function upCb(upErr, _upTr) {
+                    if (upErr) {
+                        next(upErr);
+                        return;
+                    }
+                    next();
+                });
             }
         ]
     }, function pipeCb(pipeErr, pipeRes) {
