@@ -101,6 +101,18 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    suite.test('Re-Create RecoveryConfiguration', function doCreate(t) {
+        CLIENT.createRecoveryConfiguration({
+            template: eboxTpl
+        }, function createCb(err, recoveryConfig, res) {
+            t.ifError(err, 'create recovery configuration error');
+            t.ok(recoveryConfig, 'recoveryConfig');
+            t.ok(recoveryConfig.uuid, 'recoveryConfig UUID');
+            t.equal(res.statusCode, 202, 're-create rec-cfg response code');
+            t.end();
+        });
+    });
+
     suite.test('Get RecoveryConfiguration', function doGet(t) {
         CLIENT.getRecoveryConfiguration({
             uuid: RECOVERY_CONFIG.uuid
@@ -415,6 +427,15 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ifErr(lsErr, 'list tokens error');
             t.ok(lsTk, 'list tokens');
             t.equal(lsTk.length, 0, 'tokens are just created');
+            t.end();
+        });
+    });
+
+    suite.test('List recovery configurations', function doList(t) {
+        CLIENT.listRecoveryConfigurations({
+        }, function lsCb(lsErr, lsItems) {
+            t.ifError(lsErr, 'list error');
+            t.ok(lsItems, 'list recovery configs');
             t.end();
         });
     });
