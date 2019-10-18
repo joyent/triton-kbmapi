@@ -112,6 +112,7 @@ release: check all $(SMF_MANIFESTS)
 		$(ROOT)/kbmctl.js \
 		$(ROOT)/bin \
 		$(ROOT)/cli \
+		$(ROOT)/client \
 		$(ROOT)/lib \
 		$(ROOT)/node_modules \
 		$(ROOT)/package.json \
