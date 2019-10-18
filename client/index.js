@@ -421,7 +421,7 @@ KBMAPI.prototype.updateRecoveryConfiguration =
 function updateRecoveryConfiguration(opts, cb) {
     assert.object(opts, 'opts');
     assert.uuid(opts.uuid, 'opts.uuid');
-    assert.string(opts.action, 'opts.template');
+    assert.string(opts.action, 'opts.action');
     assert.optionalString(opts.pivtoken, 'opts.pivtoken');
     assert.optionalBool(opts.force, 'opts.force');
     assert.func(cb, 'cb');

@@ -109,6 +109,9 @@ release: check all $(SMF_MANIFESTS)
 	@touch $(RELSTAGEDIR)/site/.do-not-delete-me
 	cp -r $(ROOT)/server.js \
 		$(ROOT)/transitioner.js \
+		$(ROOT)/kbmctl.js \
+		$(ROOT)/bin \
+		$(ROOT)/cli \
 		$(ROOT)/lib \
 		$(ROOT)/node_modules \
 		$(ROOT)/package.json \
