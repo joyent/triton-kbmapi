@@ -19,6 +19,8 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
+const UUID = require('node-uuid');
+
 const h = require('../helpers');
 const mod_jsprim = require('jsprim');
 const mod_token = require('../../lib/token');
@@ -239,9 +241,31 @@ test('Initial setup', function tInitialSetup(suite) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         delete tk.recovery_tokens[0].template;
         mod_token.create(t, {
-            params: tk,
+            params: Object.assign({}, tk, {
+                recovery_configuration: RECOVERY_CONFIG.params.uuid
+            }),
             exp: tk,
             privkey: privKeys[0]
+        });
+    });
+
+    suite.test('Re-create pivtoken with different recovery config',
+        function differentCfgCb(t) {
+        var tk = mod_jsprim.deepCopy(TOKENS[0]);
+        delete tk.recovery_tokens[0].template;
+        mod_token.create(t, {
+            params: Object.assign({}, tk, {
+                recovery_configuration: UUID.v4()
+            }),
+            expCode: 200,
+            partialExp: {
+                guid: tk.guid
+            },
+            privkey: privKeys[0]
+        }, function (_err, pivtk, _res) {
+            t.equal(2, pivtk.recovery_tokens.length,
+                'New recovery token created');
+            t.end();
         });
     });
 

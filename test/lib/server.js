@@ -126,7 +126,9 @@ function createTestServer(opts, callback) {
     });
 
     var kbmapi_config =
-        mod_jsprim.mergeObjects(config.server, opts.config || {});
+        mod_jsprim.mergeObjects(config.server, opts.config || {
+            recoveryTokenDuration: 15 * 60
+        });
 
     function startWithMoray(err, moray) {
         if (err) {

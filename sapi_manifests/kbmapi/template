@@ -13,5 +13,6 @@
         "maxSockets": 10,
         "url": "http://{{{CNAPI_SERVICE}}}"
     },
-    "instanceUuid": "{{auto.ZONENAME}}"
+    "instanceUuid": "{{auto.ZONENAME}}",
+    "recoveryTokenDuration": 900
 }
