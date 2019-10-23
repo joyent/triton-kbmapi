@@ -173,6 +173,24 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    // Recovery config is created active when there are no pivtokens, let's
+    // reset that:
+    suite.test('Reset recovery cfg', function (t) {
+        models.recovery_configuration.update({
+            moray: MORAY,
+            key: RECOVERY_CONFIG.uuid,
+            val: {
+                staged: '',
+                activated: ''
+            },
+            remove: true
+        }, function upCb(upErr, upRes) {
+            t.ifError(upErr, 'update error');
+            console.log(util.inspect(upRes, false, 8, true));
+            t.end();
+        });
+    });
+
     suite.test('Run not yet existing stage transition', function (t) {
         TRANSITIONER.run(function runCb(runErr, pendingTrs) {
             t.ifError(runErr, 'unexpected transitioner err');

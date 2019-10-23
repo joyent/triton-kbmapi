@@ -137,6 +137,24 @@ test('FSM Transition test', function setup(suite) {
             });
         });
 
+        // Recovery config is created active when there are no pivtokens, let's
+        // reset that:
+        suite.test('Reset recovery cfg', function (t) {
+            mod_recovery_configuration.update({
+                moray: moray,
+                key: REC_CFG_UUID,
+                val: {
+                    staged: '',
+                    activated: ''
+                },
+                remove: true
+            }, function upCb(upErr, upRes) {
+                t.ifError(upErr, 'update error');
+                REC_CFG = upRes;
+                t.end();
+            });
+        });
+
         suite.test('Stage without uuid and recCfg', function (t) {
             fsm_transition({
                 moray: moray,

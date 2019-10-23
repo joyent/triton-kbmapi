@@ -1,7 +1,12 @@
 {
     "port": 80,
     "serviceName": "{{SERVICE_NAME}}",
+    {{#KBMAPI_LOG_LEVEL}}
     "logLevel": "{{{KBMAPI_LOG_LEVEL}}}",
+    {{/KBMAPI_LOG_LEVEL}}
+    {{^KBMAPI_LOG_LEVEL}}
+    "logLevel": "debug",
+    {{/KBMAPI_LOG_LEVEL}}
     "moray": {
         "srvDomain": "{{{MORAY_SERVICE}}}",
         "logLevel": "info",

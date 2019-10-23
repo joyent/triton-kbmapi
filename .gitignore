@@ -13,3 +13,4 @@ smf/manifests/kbmapi.xml
 coverage/*
 kbmapi.vim
 config.json
+smf/manifests/kbmtr.xml
