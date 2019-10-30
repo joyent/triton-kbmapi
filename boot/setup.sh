@@ -46,8 +46,8 @@ SAPI_URL=$(/usr/bin/json -f /opt/smartdc/config-agent/etc/config.json sapi.url)
 METADATA=$(curl -s $SAPI_URL/applications?name=sdc|json -H 0.metadata)
 mkdir -p /opt/smartdc/$role/etc
 # Create private/public key files
-prinft "$($METADATA | json SDC_PUBLIC_KEY)" > /opt/smartdc/$role/etc/sdc_key.pub
-prinft "$($METADATA | json SDC_PRIVATE_KEY)" > /opt/smartdc/$role/etc/sdc_key
+/opt/local/bin/prinft "$(echo ${METADATA} | json SDC_PUBLIC_KEY)" > /opt/smartdc/$role/etc/sdc_key.pub
+/opt/local/bin/prinft "$(echo ${METADATA} | json SDC_PRIVATE_KEY)" > /opt/smartdc/$role/etc/sdc_key
 
 # All done, run boilerplate end-of-setup
 sdc_setup_complete
