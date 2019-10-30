@@ -1,5 +1,6 @@
 /node_modules
 /tmp
+/etc
 /cache/
 build
 /make_stamps
@@ -9,8 +10,7 @@ cscope.in.out
 cscope.po.out
 cscope.out
 man
-smf/manifests/kbmapi.xml
 coverage/*
 kbmapi.vim
 config.json
-smf/manifests/kbmtr.xml
+smf/manifests/*.xml

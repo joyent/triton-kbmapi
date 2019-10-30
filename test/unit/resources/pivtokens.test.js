@@ -27,7 +27,7 @@ const mod_token = require('../../lib/token');
 const mod_server = require('../../lib/server');
 const test = require('tape');
 
-// TODO: Replace this when recovery-configuration endpoint is complete:
+// TODO: Replace this with recovery-configuration endpoint:
 const models = require('../../../lib/models');
 const mod_recovery_configuration = models.recovery_configuration;
 
@@ -129,6 +129,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Create pivtoken w/o cn_uuid', function tCreateWOCNUuid(t) {
+        CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         delete tk.cn_uuid;
         mod_token.create(t, {
@@ -148,6 +149,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Create pivtoken w/o pin', function tCreateWOPin(t) {
+        CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         delete tk.pin;
         mod_token.create(t, {
@@ -167,6 +169,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Create pivtoken invalid pubkeys', function tInvalidKeys(t) {
+        CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         tk.pubkeys['9a'] = null;
         mod_token.create(t, {
@@ -186,6 +189,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Create pivtoken invalid recovery cfg', function tWrongCfg(t) {
+        CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         tk.recovery_configuration = '00000000-0000-0000-0000-000000000001';
         mod_token.create(t, {
@@ -206,6 +210,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Create pivtokens', function tCreateTokens(t) {
+        CLIENT.clean();
         function createAToken(aToken, aKey) {
             t.test('Create token GUID ' + aToken.guid, function doCreate(t3) {
                 mod_token.create(t3, {
@@ -225,6 +230,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Create pivtoken with invalid privkey', function privKeyErr(t) {
+        CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         mod_token.create(t, {
             params: tk,
@@ -238,6 +244,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Re-create pivtoken with valid privkey', function privKeyOk(t) {
+        CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         delete tk.recovery_tokens[0].template;
         mod_token.create(t, {
@@ -251,6 +258,7 @@ test('Initial setup', function tInitialSetup(suite) {
 
     suite.test('Re-create pivtoken with different recovery config',
         function differentCfgCb(t) {
+        CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         delete tk.recovery_tokens[0].template;
         mod_token.create(t, {
@@ -270,6 +278,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Get pivtoken', function tGetToken(t) {
+        CLIENT.clean();
         var tok = TOKENS[0];
 
         mod_token.get(t, {
@@ -289,6 +298,7 @@ test('Initial setup', function tInitialSetup(suite) {
 
 
     suite.test('Get pivtoken with pin requires auth', function tGetTkPin(t) {
+        CLIENT.clean();
         var tok = TOKENS[0];
 
         mod_token.getPin(t, {
@@ -304,6 +314,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Get pivtoken with pin', function tGetTokenPin(t) {
+        CLIENT.clean();
         var tok = TOKENS[1];
         delete tok.recovery_tokens[0].template;
 
@@ -322,6 +333,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('List pivtokens', function tListTokens(t) {
+        CLIENT.clean();
         var tokens = mod_jsprim.deepCopy(TOKENS);
 
         tokens.forEach(function stripPin(tok) {
@@ -336,6 +348,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Delete pivtoken requires auth', function tDelTkAuthRequired(t) {
+        CLIENT.clean();
         mod_token.delete(t, {
             params: TOKENS[0],
             expErr: {
@@ -347,14 +360,17 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Delete pivtoken', function tDeleteToken(t) {
+        CLIENT.clean();
         mod_token.delete(t, {
             params: TOKENS[0],
             privkey: privKeys[0],
+            pubkey: TOKENS[0].pubkeys['9e'],
             exp: {}
         });
     });
 
     suite.test('Lookup deleted pivtoken', function tGetDeletedToken(t) {
+        CLIENT.clean();
         mod_token.get(t, {
             params: {
                 guid: TOKENS[0].guid
@@ -368,6 +384,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('pivy-tool', function pivyCb(t) {
+        CLIENT.clean();
         var res;
         const cp = require('child_process');
         try {
@@ -422,12 +439,21 @@ test('Initial setup', function tInitialSetup(suite) {
                 tk.recovery_tokens = body2.recovery_tokens;
                 t.deepEqual(body2, tk, 'body  expected to be equal to token');
                 t.equal(response2.statusCode, 200, 'create token resp code');
-                t.end();
+                CLIENT.getTokenPin({
+                    guid: tk.guid,
+                    pivytool: pivytool
+                }, function getTkPinCb(getErr, getBody, getResponse) {
+                    t.ifError(getErr, 'getTokenPIN PIVY error');
+                    t.ok(getBody.recovery_tokens, 'getTokenPIN tokens');
+                    t.equal(getResponse.statusCode, 200, 'getTokenPIN status');
+                    t.end();
+                });
             });
         });
     });
 
     suite.test('replace pivtoken needs HMAC auth', function replaceToken401(t) {
+        CLIENT.clean();
         mod_token.recover(t, {
             params: {
                 guid: TOKENS[1].guid,
@@ -443,6 +469,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('replace pivtoken', function replacePivToken(t) {
+        CLIENT.clean();
         mod_token.recover(t, {
             params: {
                 guid: TOKENS[1].guid,
@@ -452,6 +479,42 @@ test('Initial setup', function tInitialSetup(suite) {
                 })
             },
             exp: OTHER_TOKEN
+        });
+    });
+
+    suite.test('Get pivtoken PIN with admin key', function (t) {
+        CLIENT.clean();
+        const privkey = path.resolve(__dirname, '../../../etc/sdc_key');
+        if (!fs.existsSync(privkey)) {
+            t.comment('No SDC public/private key files found');
+            t.end();
+            return;
+        }
+
+        CLIENT.getTokenPin({
+            guid: '0F4FE4B9EF0C46FC89DA79B38A61A1A1',
+            pubkey: fs.readFileSync(privkey + '.pub', 'ascii'),
+            privkey: fs.readFileSync(privkey, 'ascii')
+        }, function getTkPinCb(getErr, getBody, getResponse) {
+            t.ifError(getErr, 'getTokenPIN admin key error');
+            t.ok(getBody.recovery_tokens, 'getTokenPIN admin key tokens');
+            t.equal(getResponse.statusCode, 200, 'getTokenPIN admin key code');
+            t.end();
+        });
+    });
+
+    suite.test('Get pivtoken PIN with invalid admin key', function (t) {
+        CLIENT.clean();
+        CLIENT.getTokenPin({
+            guid: '0F4FE4B9EF0C46FC89DA79B38A61A1A1',
+            pubkey: fs.readFileSync(path.resolve(__dirname,
+                    '../../one_token_test_edcsa.pub'), 'ascii'),
+            privkey: fs.readFileSync(path.resolve(__dirname,
+                    '../../one_token_test_edcsa'), 'ascii')
+        }, function getTkPinCb(getErr, _getBody, getResponse) {
+            t.ok(getErr, 'expected error when trying to use non admin key');
+            t.equal(getResponse.statusCode, 401, 'getTokenPIN admin key code');
+            t.end();
         });
     });
 });

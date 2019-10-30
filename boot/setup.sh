@@ -7,7 +7,7 @@
 #
 
 #
-# Copyright 2018, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -40,6 +40,14 @@ sdc_log_rotation_setup_end
 
 # Add metricsPorts metadata for cmon-agent discovery
 #mdata-put metricPorts 8881
+
+# Grab SDC application ssh keys to be used later by kbmctl
+SAPI_URL=$(/usr/bin/json -f /opt/smartdc/config-agent/etc/config.json sapi.url)
+METADATA=$(curl -s $SAPI_URL/applications?name=sdc|json -H 0.metadata)
+mkdir -p /opt/smartdc/$role/etc
+# Create private/public key files
+prinft "$($METADATA | json SDC_PUBLIC_KEY)" > /opt/smartdc/$role/etc/sdc_key.pub
+prinft "$($METADATA | json SDC_PRIVATE_KEY)" > /opt/smartdc/$role/etc/sdc_key
 
 # All done, run boilerplate end-of-setup
 sdc_setup_complete

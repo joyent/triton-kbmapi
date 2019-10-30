@@ -10,12 +10,18 @@
 
 'use strict';
 
-var config = require('./config');
-var common = require('./common');
-var mod_client = require('./client');
-var mod_log = require('./log');
-var mod_jsprim = require('jsprim');
-var moray_sandbox = require('moray-sandbox');
+const fs = require('fs');
+const path = require('path');
+
+const httpSignature = require('http-signature');
+const mod_jsprim = require('jsprim');
+const moray_sandbox = require('moray-sandbox');
+
+const config = require('./config');
+const common = require('./common');
+const mod_client = require('./client');
+const mod_log = require('./log');
+
 var KBMAPI = require('../../lib/app').KBMAPI;
 
 // --- Globals
@@ -125,10 +131,17 @@ function createTestServer(opts, callback) {
         component: 'test-server'
     });
 
+    var cfg = {
+        recoveryTokenDuration: 15 * 60
+    };
+    var pubkey = path.resolve(__dirname, '../../etc/sdc_key.pub');
+    if (fs.existsSync(pubkey)) {
+        cfg.SDC_KEY_ID = httpSignature.sshKeyFingerprint(
+            fs.readFileSync(pubkey, 'ascii'));
+    }
+
     var kbmapi_config =
-        mod_jsprim.mergeObjects(config.server, opts.config || {
-            recoveryTokenDuration: 15 * 60
-        });
+        mod_jsprim.mergeObjects(config.server, opts.config || cfg);
 
     function startWithMoray(err, moray) {
         if (err) {

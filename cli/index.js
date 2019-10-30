@@ -59,9 +59,8 @@ function CLI() {
         },
         helpSubcmds: [
             'help',
-            'recovery'// ,
-//            'serial',
-//            'pivtoken'
+            'recovery',
+            'pivtokens'
         ],
         helpBody: [
             /* eslint-disable max-len */
@@ -142,8 +141,7 @@ CLI.prototype.fini = function fini(subcmd, err, cb) {
 };
 
 CLI.prototype.do_recovery = require('./do_recovery');
-// CLI.prototype.do_serials = require('./do_serials');
-// CLI.prototype.do_pivtokens = require('./do_pivtokens');
+CLI.prototype.do_pivtokens = require('./do_pivtokens');
 
 // --- mainline
 

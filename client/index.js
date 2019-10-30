@@ -148,7 +148,7 @@ KBMAPI.prototype.createToken = function createToken(opts, cb) {
         data: opts.token,
         method: 'POST',
         authRequired: true,
-        pubkey: opts.token.pubkeys['9e']
+        pubkey: opts.pubkey || opts.token.pubkeys['9e']
     });
 
     this._request(reqOpts, function reqCb(err, req, res, body) {
@@ -201,7 +201,6 @@ KBMAPI.prototype.replaceToken = function replaceToken(opts, cb) {
 KBMAPI.prototype.deleteToken = function deleteToken(opts, cb) {
     assert.object(opts, 'opts');
     assert.string(opts.guid, 'opts.guid');
-    assert.object(opts.token, 'opts.token');
     assert.func(cb, 'cb');
 
 
@@ -484,10 +483,10 @@ KBMAPI.prototype._request = function _request(opts, cb) {
     assert.optionalBool(opts.authRequired, 'opts.authRequired');
     assert.func(cb, 'cb');
 
-    var method = (opts.method || 'GET').toLowerCase();
+    const method = (opts.method || 'GET').toLowerCase();
     assert.ok(['get', 'post', 'put', 'delete', 'head'].indexOf(method) >= 0,
         'invalid HTTP method given');
-    var clientFnName = (method === 'delete' ? 'del' : method);
+    const clientFnName = (method === 'delete' ? 'del' : method);
 
     SIGNER = (opts.privkey || opts.privtoken) ? 'httpSignature' : 'pivytool';
 
@@ -527,6 +526,17 @@ KBMAPI.prototype._request = function _request(opts, cb) {
     } else {
         self.client[clientFnName](reqOpts, cb);
     }
+};
+
+// Get rid of any global variables set by a _request invocation
+KBMAPI.prototype.clean = function clean() {
+    SIGNER = null;
+    PRIVKEY = null;
+    PUBKEY = null;
+    PRIVTOKEN = null;
+    PIVYTOOL = null;
+    OPENSSL = null;
+    AUTH_REQUIRED = null;
 };
 
 module.exports = KBMAPI;
