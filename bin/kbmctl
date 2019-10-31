@@ -1,32 +1,16 @@
-#!/bin/bash
-#
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#
+#!/usr/bin/env node
 
-#
-# Copyright 2019 Joyent, Inc.
-#
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-TOP=$(unset CDPATH; cd $(dirname $0)/../; pwd)
-NODE=${TOP}/node/bin/node
-# CFG=${TOP}/config.json
-BUNYAN=${TOP}/node_modules/.bin/bunyan
+/*
+ * Copyright 2019 Joyent, Inc.
+ */
+'use strict';
 
-if [[ ! -x "${NODE}" && -d "${TOP}/build/node" ]]; then
-    # Dev/repo layout.
-    NODE=${TOP}/build/node/bin/node
-else
-    if [[ ! -e ${CFG} ]]; then
-        # We're not in the KBMAPI zone - just fall back to whatever node's
-        # in PATH:
-        NODE=node
-    fi
-fi
+require('../cli').main();
 
-[[ "$1" == "log" ]] && ${BUNYAN} $(svcs -L kbmapi) && exit 0
-[[ "$1" == "lastlog" ]] && tail -n 20 $(svcs -L kbmapi) | ${BUNYAN} && exit 0
-[[ "$1" == "tail" ]] && exec tail -f $(svcs -L kbmapi) | ${BUNYAN}
-
-${NODE} ${TOP}/kbmctl.js "$@"
+// vim: set softtabstop=4 shiftwidth=4:

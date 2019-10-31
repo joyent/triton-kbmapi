@@ -62,8 +62,6 @@ RecoveryCLI.prototype.do_remove = require('./do_remove');
 // RecoveryCLI.prototype.do_wait = require('./do_wait');
 
 
-RecoveryCLI.aliases = ['cfg'];
-
 module.exports = RecoveryCLI;
 
 // vim: set softtabstop=4 shiftwidth=4:

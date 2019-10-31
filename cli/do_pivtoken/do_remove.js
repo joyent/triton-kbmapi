@@ -16,7 +16,9 @@ const path = require('path');
 const util = require('util');
 
 const cmdln = require('cmdln');
+const vasync = require('vasync');
 
+const common = require('../common.js');
 const privkeyPath = path.resolve(__dirname, '../../etc/sdc_key');
 
 function do_remove(subcmd, opts, args, cb) {
@@ -47,21 +49,46 @@ function do_remove(subcmd, opts, args, cb) {
         return;
     }
 
-    kbmapi.deleteToken({
-        guid: guid,
-        privkey: privkey,
-        pubkey: pubkey
-    }, function removeCb(err, res) {
-        if (err) {
-            log.error({
-                err: err,
-                uuid: guid
-            }, 'Remove PIVToken error');
-            cb(err);
-            return;
+    vasync.pipeline({funcs: [
+        function confirm(_, next) {
+            if (opts.force) {
+                next();
+                return;
+            }
+
+            common.promptYesNo({
+                msg: util.format('Delete PIVToken %s? [y/n] ', guid)
+            }, function (answer) {
+                if (answer !== 'y') {
+                    console.error('Aborting');
+                    next(true); // early abort signal
+                    return;
+                }
+                next();
+            });
+        },
+
+        function removePIVToken(_, next) {
+            kbmapi.deleteToken({
+                guid: guid,
+                privkey: privkey,
+                pubkey: pubkey
+            }, function removeCb(err, res) {
+                if (err) {
+                    log.error({
+                        err: err,
+                        uuid: guid
+                    }, 'Remove PIVToken error');
+                    next(err);
+                    return;
+                }
+                console.log('PIVToken successfuly removed.');
+                next();
+            });
         }
-        console.log('PIVToken successfuly removed.');
-        cb();
+
+    ]}, function pipeCb(pipeErr) {
+        cb(pipeErr);
     });
     /* eslint-enable no-invalid-this */
 }
@@ -71,7 +98,13 @@ do_remove.options = [
         names: ['help', 'h'],
         type: 'bool',
         help: 'Show this help.'
+    },
+    {
+        names: ['force', 'f'],
+        type: 'bool',
+        help: 'Skip confirmation of delete.'
     }
+
 ];
 
 do_remove.synopses = [
@@ -92,6 +125,8 @@ do_remove.help = [
 do_remove.helpOpts = {
     maxHelpCol: 20
 };
+
+do_remove.aliases = ['rm', 'delete', 'del'];
 
 module.exports = do_remove;
 // vim: set softtabstop=4 shiftwidth=4:

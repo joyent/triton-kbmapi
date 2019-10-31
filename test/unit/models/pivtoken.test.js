@@ -33,7 +33,7 @@ const log_child = mod_log.child({
 const test = require('tape');
 
 const eboxTpl = fs.readFileSync(path.resolve(
-    __dirname, '../../backup'), 'ascii');
+    __dirname, '../../fixtures/backup'), 'ascii');
 
 var TOKENS = [
     {
@@ -46,7 +46,7 @@ var TOKENS = [
             /* eslint-disable max-len */
             '9a': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBC7NhJvp9c5XMOkPLfDvsHZytnY4cWduFRF4KlQIr7LNQnbw50NNlbyhXHzD85KjcztyMoqn9w4XuHdJh4O1lH4=',
             '9d': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD+uKKyn5tBNziW21yPt/0FE2LD4l1cWgzONYjn3n8BzSNo/aTzJccki7Q/Lyk7dM8yZLAc/5V/U/QHbLTpexBg=',
-            '9e': fs.readFileSync(path.resolve(__dirname, '../../one_token_test_edcsa.pub'), 'ascii')
+            '9e': fs.readFileSync(path.resolve(__dirname, '../../fixtures/one_token_test_edcsa.pub'), 'ascii')
             /* eslint-enable max-len */
         }
     }

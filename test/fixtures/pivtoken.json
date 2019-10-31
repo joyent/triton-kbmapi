@@ -1,0 +1,12 @@
+{
+        "guid":"75CA077A14C5E45037D7A0740D5602A5",
+        "pin":"12345",
+        "serial":"abcd12345",
+        "model":"ACME insta-token model 1",
+        "cn_uuid":"00000000-0000-0000-0000-000000000001",
+        "pubkeys":{
+                "9a":"ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBC7NhJvp9c5XMOkPLfDvsHZytnY4cWduFRF4KlQIr7LNQnbw50NNlbyhXHzD85KjcztyMoqn9w4XuHdJh4O1lH4=",
+                "9d":"ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD+uKKyn5tBNziW21yPt/0FE2LD4l1cWgzONYjn3n8BzSNo/aTzJccki7Q/Lyk7dM8yZLAc/5V/U/QHbLTpexBg=",
+                "9e":"ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBADLQ8fNp4/+aAg7S/nWrUU6nl3bd3eajkk7LJu42qZWu8+b218MspLSzpwv3AMnwQDaIhM7kt/HhXfYgiQXd30zYAC/xZlz0TZP2XHMjJoVq4VbwZfqxXXAmySwtm6cDY7tWvFOHlQgF3SofE5Fd/6gupHy59+3dtLKwZMMU1ewcPm8sg== kbmapi test one token\\n"
+        }
+}

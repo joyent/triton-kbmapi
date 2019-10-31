@@ -134,11 +134,6 @@ function createTestServer(opts, callback) {
     var cfg = {
         recoveryTokenDuration: 15 * 60
     };
-    var pubkey = path.resolve(__dirname, '../../etc/sdc_key.pub');
-    if (fs.existsSync(pubkey)) {
-        cfg.SDC_KEY_ID = httpSignature.sshKeyFingerprint(
-            fs.readFileSync(pubkey, 'ascii'));
-    }
 
     var kbmapi_config =
         mod_jsprim.mergeObjects(config.server, opts.config || cfg);

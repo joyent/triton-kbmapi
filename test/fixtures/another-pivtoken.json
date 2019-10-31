@@ -1,0 +1,12 @@
+{
+        "guid": "DDA81AA0DB3528479AB6D2AC75624E5E",
+        "pin": "54321",
+        "serial": "deadbeef123",
+        "model": "ACME insta-token model 1",
+        "cn_uuid": "00000000-0000-0000-0000-000000000002",
+        "pubkeys": {
+            "9a": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEv/A+0Gc6X5fADdewP1+VJvqgq+ANVCA9rLHxvVkbqbDeFoUBFIPBqKBmpw6kWMb4J6B+4oQTp936+CgdJySz8=",
+            "9d": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFD+ANQt5yC9EvPa5V7OfFpscRDbN9e+ghc0g+u6wVA4CQw1+/s4NRUybf/HIOveYHfpiP9ai5C6HAZYQE28rNY=",
+            "9e": "ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBAA6H1gT8uJBMc7mknW7Wi0M2/2x/65lKZy9DLM9x60pU6wt8KsBI2PKJoUY/7Jq6dyIRckVzNh15z78agjshPu9aQHiKVRn8lEbNTuAuCr6NbEx62yQbAamf85qpQMaUT47hjHhP5srMMGb7cjBTCO1rTsVOxYcIc7bmnLEy69nRmpxaA== kbmapi test another token"
+        }
+}

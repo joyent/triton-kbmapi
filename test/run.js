@@ -6,7 +6,7 @@
 
 var assert = require('assert-plus');
 var fs = require('fs');
-var mod_server = require('../lib/server');
+var mod_server = require('./lib/server');
 var path = require('path');
 var test = require('tape');
 
@@ -27,8 +27,9 @@ function runTests(directory) {
 }
 
 (function main() {
-    runTests(__dirname + '/models');
-    runTests(__dirname + '/resources');
+    runTests(__dirname + '/unit/models');
+    runTests(__dirname + '/unit/resources');
+    runTests(__dirname + '/integration');
 })();
 
 // vim: set softtabstop=4 shiftwidth=4:

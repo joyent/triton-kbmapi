@@ -31,7 +31,7 @@ const log_child = mod_log.child({
 const test = require('tape');
 
 const eboxTpl = fs.readFileSync(path.resolve(
-    __dirname, '../../backup'), 'ascii');
+    __dirname, '../../fixtures/backup'), 'ascii');
 
 test('RecoveryConfiguration model test', function setup(suite) {
     mod_server.setupMoray(log_child, function setupCb(setupErr, moray) {

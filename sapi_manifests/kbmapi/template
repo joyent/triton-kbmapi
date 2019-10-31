@@ -19,6 +19,5 @@
         "url": "http://{{{CNAPI_SERVICE}}}"
     },
     "instanceUuid": "{{auto.ZONENAME}}",
-    "SDC_KEY_ID": "{{{SDC_KEY_ID}}}",
     "recoveryTokenDuration": 900
 }

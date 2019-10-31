@@ -75,5 +75,7 @@ do_remove.helpOpts = {
     maxHelpCol: 20
 };
 
+do_remove.aliases = ['rm', 'delete', 'del'];
+
 module.exports = do_remove;
 // vim: set softtabstop=4 shiftwidth=4:

@@ -94,7 +94,7 @@ CLEAN_FILES += ./node_modules/tape
 
 .PHONY: test
 test: $(ISTANBUL) $(FAUCET)
-	$(NODE) $(ISTANBUL) cover --print none test/unit/run.js | $(FAUCET)
+	$(NODE) $(ISTANBUL) cover --print none test/run.js | $(FAUCET)
 
 #
 # Packaging targets

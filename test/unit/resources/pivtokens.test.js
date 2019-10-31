@@ -32,7 +32,7 @@ const models = require('../../../lib/models');
 const mod_recovery_configuration = models.recovery_configuration;
 
 const eboxTpl = fs.readFileSync(path.resolve(
-    __dirname, '../../backup'), 'ascii');
+    __dirname, '../../fixtures/backup'), 'ascii');
 
 var KBMAPI;
 var MORAY;
@@ -52,7 +52,7 @@ var TOKENS = [
             /* eslint-disable max-len */
             '9a': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBC7NhJvp9c5XMOkPLfDvsHZytnY4cWduFRF4KlQIr7LNQnbw50NNlbyhXHzD85KjcztyMoqn9w4XuHdJh4O1lH4=',
             '9d': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD+uKKyn5tBNziW21yPt/0FE2LD4l1cWgzONYjn3n8BzSNo/aTzJccki7Q/Lyk7dM8yZLAc/5V/U/QHbLTpexBg=',
-            '9e': fs.readFileSync(path.resolve(__dirname, '../../one_token_test_edcsa.pub'), 'ascii')
+            '9e': fs.readFileSync(path.resolve(__dirname, '../../fixtures/one_token_test_edcsa.pub'), 'ascii')
             /* eslint-enable max-len */
         }
     },
@@ -66,7 +66,7 @@ var TOKENS = [
             /* eslint-disable max-len */
             '9a': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEv/A+0Gc6X5fADdewP1+VJvqgq+ANVCA9rLHxvVkbqbDeFoUBFIPBqKBmpw6kWMb4J6B+4oQTp936+CgdJySz8=',
             '9d': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFD+ANQt5yC9EvPa5V7OfFpscRDbN9e+ghc0g+u6wVA4CQw1+/s4NRUybf/HIOveYHfpiP9ai5C6HAZYQE28rNY=',
-            '9e': fs.readFileSync(path.resolve(__dirname, '../../another_token_test_edcsa.pub'), 'ascii')
+            '9e': fs.readFileSync(path.resolve(__dirname, '../../fixtures/another_token_test_edcsa.pub'), 'ascii')
             /* eslint-enable max-len */
         }
     }
@@ -82,7 +82,7 @@ var OTHER_TOKEN = {
             /* eslint-disable max-len */
             '9a': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEv/A+0Gc6X5fADdewP1+VJvqgq+ANVCA9rLHxvVkbqbDeFoUBFIPBqKBmpw6kWMb4J6B+4oQTp936+CgdJySz8=',
             '9d': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFD+ANQt5yC9EvPa5V7OfFpscRDbN9e+ghc0g+u6wVA4CQw1+/s4NRUybf/HIOveYHfpiP9ai5C6HAZYQE28rNY=',
-            '9e': fs.readFileSync(path.resolve(__dirname, '../../another_token_recovery_edcsa.pub'), 'ascii')
+            '9e': fs.readFileSync(path.resolve(__dirname, '../../fixtures/another_token_recovery_edcsa.pub'), 'ascii')
             /* eslint-enable max-len */
     }
 };
@@ -90,9 +90,11 @@ var OTHER_TOKEN = {
 var RECOVERY_TOKEN;
 
 var privKeys = [
-    fs.readFileSync(path.resolve(__dirname, '../../one_token_test_edcsa'),
+    fs.readFileSync(path.resolve(__dirname,
+        '../../fixtures/one_token_test_edcsa'),
         'ascii'),
-    fs.readFileSync(path.resolve(__dirname, '../../another_token_test_edcsa'),
+    fs.readFileSync(path.resolve(__dirname,
+        '../../fixtures/another_token_test_edcsa'),
         'ascii')
 ];
 
@@ -508,9 +510,9 @@ test('Initial setup', function tInitialSetup(suite) {
         CLIENT.getTokenPin({
             guid: '0F4FE4B9EF0C46FC89DA79B38A61A1A1',
             pubkey: fs.readFileSync(path.resolve(__dirname,
-                    '../../one_token_test_edcsa.pub'), 'ascii'),
+                    '../../fixtures/one_token_test_edcsa.pub'), 'ascii'),
             privkey: fs.readFileSync(path.resolve(__dirname,
-                    '../../one_token_test_edcsa'), 'ascii')
+                    '../../fixtures/one_token_test_edcsa'), 'ascii')
         }, function getTkPinCb(getErr, _getBody, getResponse) {
             t.ok(getErr, 'expected error when trying to use non admin key');
             t.equal(getResponse.statusCode, 401, 'getTokenPIN admin key code');

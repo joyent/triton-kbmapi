@@ -56,7 +56,7 @@ PIVTokenCLI.prototype.do_remove = require('./do_remove');
 // PIVTokenCLI.prototype.do_update = require('./do_update');
 
 
-PIVTokenCLI.aliases = ['piv'];
+PIVTokenCLI.aliases = ['piv', 'pivtokens'];
 
 module.exports = PIVTokenCLI;
 

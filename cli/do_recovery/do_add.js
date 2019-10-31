@@ -126,5 +126,7 @@ do_add.helpOpts = {
     maxHelpCol: 20
 };
 
+do_add.aliases = ['create'];
+
 module.exports = do_add;
 // vim: set softtabstop=4 shiftwidth=4:
