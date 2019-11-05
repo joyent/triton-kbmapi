@@ -183,6 +183,7 @@ test('Initial setup', function tInitialSetup(suite) {
         h.kbmctl([
             'pivtoken',
             'remove',
+            PIVTK.guid,
             '--force'
         ], function (err, stdout, stderr) {
             if (h.ifErr(t, err, 'remove pivtoken')) {
