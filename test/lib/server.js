@@ -10,10 +10,6 @@
 
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-
-const httpSignature = require('http-signature');
 const mod_jsprim = require('jsprim');
 const moray_sandbox = require('moray-sandbox');
 
@@ -132,7 +128,9 @@ function createTestServer(opts, callback) {
     });
 
     var cfg = {
-        recoveryTokenDuration: 15 * 60
+        recoveryTokenDuration: 15 * 60,
+        port: 8080,
+        host: 'localhost'
     };
 
     var kbmapi_config =
