@@ -112,12 +112,15 @@ function do_add(subcmd, opts, args, cb) {
             cb(pipeErr);
             return;
         }
-        if (context.statusCode === 200) {
-            console.log('PIVToken already exists.');
+
+        if (opts.json) {
+            console.log(JSON.stringify(context.pivtoken));
         } else {
-            console.log('PIVToken created.');
+            var msg = 'PIVToken ';
+            msg += (context.statusCode === 200) ? 'already exists' : 'created';
+            msg += ' (' + context.pivtoken.guid + ').';
+            console.log(msg);
         }
-        console.log(util.inspect(context.pivtoken, false, 8, true));
         cb();
     });
     /* eslint-enable no-invalid-this */
@@ -128,6 +131,11 @@ do_add.options = [
         names: ['help', 'h'],
         type: 'bool',
         help: 'Show this help.'
+    },
+    {
+        names: ['json', 'j'],
+        type: 'bool',
+        help: 'JSON stream output.'
     }
 ];
 

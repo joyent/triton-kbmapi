@@ -45,7 +45,6 @@ function execPlus(args, cb) {
     if (typeof (command) === 'string') {
         command = ['/bin/sh', '-c', command];
     }
-
     execFile(command[0], command.slice(1), execOpts,
         function (err, stdout, stderr) {
         if (err) {
@@ -67,10 +66,10 @@ function execPlus(args, cb) {
 
 
 /*
- * Call the `triton` CLI with the given args.
+ * Call the `kbmctl` CLI with the given args.
  *
- * @param args {String|Array} Required. CLI arguments to `triton ...` (without
- *      the "triton"). This can be an array of args, or a string.
+ * @param args {String|Array} Required. CLI arguments to `kbmctl ...` (without
+ *      the "kbmctl"). This can be an array of args, or a string.
  * @param opts {Object} Optional.
  *      - opts.cwd {String} cwd option to exec.
  * @param cb {Function}
@@ -87,7 +86,6 @@ function kbmctl(args, opts, cb) {
     assert.object(opts, 'opts');
     assert.optionalString(opts.cwd, 'opts.cwd');
     assert.func(cb, 'cb');
-
     execPlus({
         command: command,
         execOpts: {

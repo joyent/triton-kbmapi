@@ -14,12 +14,13 @@
 
 'use strict';
 
-var f = require('util').format;
+const f = require('util').format;
 
-var h = require('./helpers');
-var test = require('tape');
+const test = require('tape');
 
-var subs = [
+const h = require('./helpers');
+
+const subs = [
     ['recovery'],
     ['recovery list', 'recovery ls'],
     ['recovery get'],

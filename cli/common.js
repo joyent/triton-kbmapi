@@ -11,6 +11,8 @@
 
 const fs = require('fs');
 const tty = require('tty');
+const util = require('util');
+const format = util.format;
 
 const assert = require('assert-plus');
 const jsprim = require('jsprim');
@@ -143,9 +145,99 @@ function promptYesNo(opts_, cb) {
     }
 }
 
+/*
+ * take some basic information and return node-cmdln options suitable for
+ * tabula
+ *
+ * @param {String} (optional) opts.columnDefault Default value for `-o`
+ * @param {String} (optional) opts.sortDefault Default value for `-s`
+ * @param {String} (optional) opts.includeLong Include `-l` option
+ * @return {Array} Array of cmdln options objects
+ */
+function getCliTableOptions(opts) {
+    opts = opts || {};
+    assert.object(opts, 'opts');
+    assert.optionalString(opts.columnsDefault, 'opts.columnsDefault');
+    assert.optionalString(opts.sortDefault, 'opts.sortDefault');
+    assert.optionalBool(opts.includeLong, 'opts.includeLong');
+
+    var o;
+
+    // construct the options object
+    var tOpts = [];
+
+    // header
+    tOpts.push({
+        group: 'Output options'
+    });
+
+    // -H
+    tOpts.push({
+        names: ['H'],
+        type: 'bool',
+        help: 'Omit table header row.'
+    });
+
+    // -o field1,field2,...
+    o = {
+        names: ['o'],
+        type: 'string',
+        help: 'Specify fields (columns) to output.',
+        helpArg: 'field1,...'
+    };
+    if (opts.columnsDefault) {
+        o.default = opts.columnsDefault;
+    }
+    tOpts.push(o);
+
+    // -l, --long
+    if (opts.includeLong) {
+        tOpts.push({
+            names: ['long', 'l'],
+            type: 'bool',
+            help: 'Long/wider output. Ignored if "-o ..." is used.'
+        });
+    }
+
+    // -s field1,field2,...
+    o = {
+        names: ['s'],
+        type: 'string',
+        help: 'Sort on the given fields.',
+        helpArg: 'field1,...'
+    };
+    if (opts.sortDefault) {
+        o.default = opts.sortDefault;
+        o.help = format('%s Default is "%s".', o.help, opts.sortDefault);
+    }
+    tOpts.push(o);
+
+    // -j, --json
+    tOpts.push({
+        names: ['json', 'j'],
+        type: 'bool',
+        help: 'JSON output.'
+    });
+
+    return tOpts;
+}
+
+/**
+ * given an array return a string with each element
+ * JSON-stringifed separated by newlines
+ */
+function jsonStream(arr, stream) {
+    stream = stream || process.stdout;
+
+    arr.forEach(function (elem) {
+        stream.write(JSON.stringify(elem) + '\n');
+    });
+}
 
 module.exports = {
     readStdin: readStdin,
-    promptYesNo: promptYesNo
+    promptYesNo: promptYesNo,
+    getCliTableOptions: getCliTableOptions,
+    jsonStream: jsonStream
 };
 // vim: set softtabstop=4 shiftwidth=4:

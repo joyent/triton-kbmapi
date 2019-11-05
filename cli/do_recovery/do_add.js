@@ -12,7 +12,6 @@
 'use strict';
 
 const cmdln = require('cmdln');
-const util = require('util');
 const fs = require('fs');
 const vasync = require('vasync');
 
@@ -87,12 +86,14 @@ function do_add(subcmd, opts, args, cb) {
             cb(pipeErr);
             return;
         }
-        if (context.statusCode === 202) {
-            console.log('Recovery configuration already exists.');
+        if (opts.json) {
+            console.log(JSON.stringify(context.recoveryConfig));
         } else {
-            console.log('Recovery configuration created.');
+            var msg = 'Recovery configuration ';
+            msg += (context.statusCode === 202) ? 'already exists' : 'created';
+            msg += ' (' + context.recoveryConfig.uuid + ').';
+            console.log(msg);
         }
-        console.log(util.inspect(context.recoveryConfig, false, 8, true));
         cb();
     });
     /* eslint-enable no-invalid-this */
@@ -103,6 +104,11 @@ do_add.options = [
         names: ['help', 'h'],
         type: 'bool',
         help: 'Show this help.'
+    },
+    {
+        names: ['json', 'j'],
+        type: 'bool',
+        help: 'JSON stream output.'
     }
 ];
 

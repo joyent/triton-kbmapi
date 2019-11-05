@@ -12,6 +12,21 @@
 'use strict';
 
 const cmdln = require('cmdln');
+const jsprim = require('jsprim');
+const tabula = require('tabula');
+
+const common = require('../common.js');
+
+// columns default without -o
+const columnsDefault = 'guid,cn_uuid,active,staged';
+
+// columns default with -l
+// (same for now)
+const columnsDefaultLong = columnsDefault;
+
+// sort default with -s
+const sortDefault = 'created';
+
 
 function do_list(subcmd, opts, args, cb) {
     // Given how cmdln instantiates the subcommands, this rule is useless:
@@ -23,6 +38,17 @@ function do_list(subcmd, opts, args, cb) {
         cb(new cmdln.UsageError('incorrect number of arguments'));
         return;
     }
+
+    var columns = columnsDefault;
+    if (opts.o) {
+        columns = opts.o;
+    } else if (opts.long) {
+        columns = columnsDefaultLong;
+    }
+    columns = columns.split(',');
+
+    var sort = opts.s.split(',');
+
 
     var log = this.top.log;
     var kbmapi = this.top.kbmapi;
@@ -36,8 +62,31 @@ function do_list(subcmd, opts, args, cb) {
             cb(err);
             return;
         }
-        const util = require('util');
-        console.log(util.inspect(items, false, 8, true));
+
+        items.forEach(function (item) {
+            const rectokens = jsprim.deepCopy(item.recovery_tokens).reverse();
+            item.active_token = rectokens.find(function (tk) {
+                return tk.active;
+            });
+            item.active = item.active_token ?
+                item.active_token.recovery_configuration : null;
+            item.staged_token = rectokens.find(function (tk) {
+                return tk.staged;
+            });
+            item.staged = item.staged_token ?
+                item.staged_token.recovery_configuration : null;
+        });
+
+        if (opts.json) {
+            common.jsonStream(items);
+        } else {
+            tabula(items, {
+                skipHeader: opts.H,
+                columns: columns,
+                sort: sort,
+                dottedLookup: true
+            });
+        }
         cb();
     });
     /* eslint-enable no-invalid-this */
@@ -49,7 +98,10 @@ do_list.options = [
         type: 'bool',
         help: 'Show this help.'
     }
-];
+].concat(common.getCliTableOptions({
+    includeLong: true,
+    sortDefault: sortDefault
+}));
 
 do_list.synopses = [
     '{{name}} {{cmd}} [OPTIONS]'

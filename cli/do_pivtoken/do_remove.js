@@ -104,7 +104,6 @@ do_remove.options = [
         type: 'bool',
         help: 'Skip confirmation of delete.'
     }
-
 ];
 
 do_remove.synopses = [
