@@ -46,6 +46,8 @@ against accidental PIV token deletion.
 
 #### Attestation
 
+NOTE: Attestation or token preloading are not implemented for KBMAPI v1.0
+
 [yubi-attest](https://developers.yubico.com/PIV/Introduction/PIV_attestation.html)
 
 Some PIV tokens have extensions that allow for attestation -- that is a method
@@ -224,7 +226,9 @@ encryption.
 API call to obtain its pin, should we still go ahead and store the data for
 the HN PIV token in KBMAPI?
 
-#### Preloading PIV tokens (TO-DO)
+#### Preloading PIV tokens
+
+NOTE: Preloading PIV tokens is not supported by KBMAPI v1.0
 
 To support an operator preloading unprovisioned PIV tokens, we track ranges of
 serial numbers that are allowed to be provisioned.  We use a separate
@@ -265,7 +269,9 @@ comment       | An operator supplied free form comment.
 
 The `kbmctl` command is used to manage this data.
 
-#### Audit Trail (TO-DO)
+#### Audit Trail
+
+NOTE: Audit trail is not supported by KBMAPI v1.0
 
 Given the critical nature of the PIV token data, we want to provide an audit
 trail of activity.  While there is discussion of creating an AuditAPI at
@@ -404,6 +410,9 @@ complicated and prone to breaking.  Given what is at stake in terms of the
 data on the system, we feel it is an unacceptable risk to try to work around
 such a situation (instead of having the hardware vendor resolve it).
 
+IMPORTANT: Don't forget that Attestation and token preloading are not supported
+by KBMAPI v1.0
+
 If the request does not generate any of the above errors, the request is
 If the attestation section is supplied, the attestation certs _must_ agree
 with the pubkeys supplied in the request.  If they do not agree, or if
@@ -429,6 +438,7 @@ Recovery Tokens may include some or all of the following fields:
 
 **Field**               | **Required** | **Description**
 ------------------------|--------------|-----------------
+uuid                    | Yes          | The UUID of the provisioned Recovery token.
 pivtoken                | Yes          | The GUID of the provisioned PIV token.
 token                   | Yes          | The encrypted recovery token which could be used for HMAC auth in case the PIVToken is not available.
 recovery\_configuration | Yes          | The UUID of the recovery configuration template to be used with the token.
@@ -877,6 +887,246 @@ Response-Time: 997
 Note: alternatively, an operator can manually run kbmadm to delete an entry.
 
 A destroyed PIV token is automatically added to `token_history`.
+
+## Recovery Tokens
+
+In order to simplify the management of recovery tokens from the CN's where recovery configurations are being staged or activated,
+convenience end-points related to the recovery tokens associated to the given PIV Token the recovery tokens are associated to.
+
+All the recovery token requests are authenticated using the 9e key of the PIV token the recovery token(s) belong to.
+
+#### ListRecoveryTokens (GET /pivtokens/:guid/recovery-tokens)
+
+List all the existing recovery tokens for the given PIV Token `:guid`.
+
+Sample request:
+
+```
+GET /pivtokens/75CA077A14C5E45037D7A0740D5602A5/recovery-tokens
+X-Request-Id: e287c376-3fbb-4f55-b10a-cb31e6ffc08d
+Accept: application/json
+User-Agent: restify/1.6.0 (x64-darwin; v8/5.1.281.111; OpenSSL/1.0.2r) node/6.17.1
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Host: kbmapi.mytriton.example.com
+Authorization: Signature <Base64(rsa(sha256($Date)))>
+Connection: close
+---
+{ guid: '75CA077A14C5E45037D7A0740D5602A5' }
+```
+Sample Response:
+
+```
+Content-Type: application/json
+Content-Length: 573
+X-Response-Time: 19
+Server-Name: my.triton.server
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Connection: close
+X-Request-Received: 1573055351322
+X-Request-Processing-Time: 24
+
+200 OK
+---
+[ { token: 'cd990dffcc5359096430645a1c5f4b8e90bdca1b4efabcc0a093434c8806e5e485720cfb69f61d32',
+    created: '2019-11-06T15:49:11.101Z',
+    expired: '2019-11-06T15:49:11.218Z',
+    pivtoken: '75CA077A14C5E45037D7A0740D5602A5',
+    recovery_configuration: 'f85b894e-d02c-5b1c-b2ea-0564ef55ee24',
+    uuid: '9f8f4f79-7069-557d-a009-46cdb2a69c93' },
+  { token: 'ca0dab3f5b936f6a97e98d9161b6fc3da2ab8c4f086ad286f9bdf296cbc5c9026d224fbd0b0d109e',
+    created: '2019-11-06T15:49:11.218Z',
+    pivtoken: '75CA077A14C5E45037D7A0740D5602A5',
+    recovery_configuration: 'ff6d69c1-0af2-4441-9416-7bd8a9ec56fe',
+    uuid: '03482e94-64b0-50d3-a858-23fdf3ff47f6' } ]
+```
+
+#### CreateRecoveryToken (POST /pivtokens/:guid/recovery-tokens)
+
+While the values for `token`, `uuid` (will be inferred from `token` otherwise),
+`created` and `recovery_configuration` can be provided, the expected usage is
+to just request the creation of a new recovery token which will use the currently
+active recovery configuration.
+
+When creating new tokens for later staging a new recovery configuration into a CN
+where a token using the currently active recovery configuration, the new (not yet
+active) `recovery_configuration` should be provided.
+
+Sample Request:
+
+```
+POST /pivtokens/75CA077A14C5E45037D7A0740D5602A5/recovery-tokens
+X-Request-Id: e287c376-3fbb-4f55-b10a-cb31e6ffc08d
+Accept: application/json
+Content-Type: application/json
+User-Agent: restify/1.6.0 (x64-darwin; v8/5.1.281.111; OpenSSL/1.0.2r) node/6.17.1
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Content-Length: 2
+Content-Md5: mZFLkyvTelC5g8XnyQrpOw==
+Host: kbmapi.mytriton.example.com
+Authorization: Signature <Base64(rsa(sha256($Date)))>
+Connection: close
+---
+{ guid: '75CA077A14C5E45037D7A0740D5602A5' }
+```
+
+Sample Response:
+
+```
+Content-Type: application/json
+Content-Length: 285
+X-Response-Time: 18
+Server-Name: my.triton.server
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Connection: close
+X-Request-Received: 1573055351348
+X-Request-Processing-Time: 24
+
+201 Created
+---
+{ token: 'd115cecb97e90cdd26a7955778d09d13b4343ae4a46456fd855056df2cbee7ca4143d5c6d8a204a2',
+  created: '2019-11-06T15:49:11.366Z',
+  pivtoken: '75CA077A14C5E45037D7A0740D5602A5',
+  recovery_configuration: 'ff6d69c1-0af2-4441-9416-7bd8a9ec56fe',
+  uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081' }
+```
+
+#### GetRecoveryToken (GET /pivtokens/:guid/recovery-tokens/:uuid)
+
+Get details for the given recovery token.
+
+**Field**               | **Description**
+------------------------|-----------------
+pivtoken                | PIV token GUID
+uuid                    | UUID of the recovery token
+recovery\_configuration | UUID of the recovery configuration associated with the recovery token
+token                   | The proper recovery token string
+created                 | When the token was created
+staged                  | Timestamp when the token was staged into the PIV token's associated CN
+activated               | Ditto for when the token was activated
+expired                 | When the token has been replaced by a new one into the CN
+
+
+Sample Request:
+
+```
+GET /pivtokens/75CA077A14C5E45037D7A0740D5602A5/recovery-tokens/2e618395-eb6f-59d6-a817-cf972b4ad081
+X-Request-Id: e287c376-3fbb-4f55-b10a-cb31e6ffc08d
+Accept: application/json
+User-Agent: restify/1.6.0 (x64-darwin; v8/5.1.281.111; OpenSSL/1.0.2r) node/6.17.1
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Host: kbmapi.mytriton.example.com
+Authorization: Signature <Base64(rsa(sha256($Date)))>
+Connection: close
+---
+{ guid: '75CA077A14C5E45037D7A0740D5602A5',
+  uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081' }
+```
+
+Sample Response:
+
+```
+Content-Type: application/json
+Content-Length: 285
+X-Response-Time: 27
+Server-Name: my.triton.server
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Connection: close
+X-Request-Received: 1573055351377
+X-Request-Processing-Time: 33
+
+200 OK
+---
+{ token: 'd115cecb97e90cdd26a7955778d09d13b4343ae4a46456fd855056df2cbee7ca4143d5c6d8a204a2',
+  created: '2019-11-06T15:49:11.366Z',
+  pivtoken: '75CA077A14C5E45037D7A0740D5602A5',
+  recovery_configuration: 'ff6d69c1-0af2-4441-9416-7bd8a9ec56fe',
+  uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081' }
+```
+
+#### UpdateRecoveryToken (PUT /pivtokens/:guid/recovery-tokens/:uuid)
+
+Modify the values for token's `staged`, `activated` and `expired`. Used to collect information
+regarding when a recovery token has been staged or activated into a CN, or when it has been
+superseded by another one.
+
+Sample Request:
+
+```
+PUT /pivtokens/75CA077A14C5E45037D7A0740D5602A5/recovery-tokens/2e618395-eb6f-59d6-a817-cf972b4ad081
+X-Request-Id: e287c376-3fbb-4f55-b10a-cb31e6ffc08d
+Accept: application/json
+Content-Type: application/json
+User-Agent: restify/1.6.0 (x64-darwin; v8/5.1.281.111; OpenSSL/1.0.2r) node/6.17.1
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Content-Length: 76
+Content-Md5: fsZh6anm1pBXWAP9ZziqCg==
+Host: kbmapi.mytriton.example.com
+Authorization: Signature <Base64(rsa(sha256($Date)))>
+Connection: close
+---
+{ guid: '75CA077A14C5E45037D7A0740D5602A5',
+  uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081',
+  staged: '2019-11-06T15:49:11.411Z',
+  activated: '2019-11-06T15:49:11.411Z' }
+```
+
+Sample Response:
+
+```
+Content-Type: application/json
+Content-Length: 360
+X-Response-Time: 29
+Server-Name: my.triton.server
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Connection: close
+X-Request-Received: 1573055351411
+X-Request-Processing-Time: 35
+
+200 OK
+---
+{ token: 'd115cecb97e90cdd26a7955778d09d13b4343ae4a46456fd855056df2cbee7ca4143d5c6d8a204a2',
+  created: '2019-11-06T15:49:11.366Z',
+  staged: '2019-11-06T15:49:11.411Z',
+  activated: '2019-11-06T15:49:11.411Z',
+  pivtoken: '75CA077A14C5E45037D7A0740D5602A5',
+  recovery_configuration: 'ff6d69c1-0af2-4441-9416-7bd8a9ec56fe',
+  uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081' }
+```
+
+#### DeleteRecoveryToken (DELETE /pivtokens/:guid/recovery-tokens/:uuid)
+
+Remove a recovery token. Note this is not possible if the recovery token is active or staged. It needs
+to be expired before.
+
+Sample Request:
+
+```
+DELETE /pivtokens/75CA077A14C5E45037D7A0740D5602A5/recovery-tokens/2e618395-eb6f-59d6-a817-cf972b4ad081
+X-Request-Id: e287c376-3fbb-4f55-b10a-cb31e6ffc08d
+Accept: application/json
+User-Agent: restify/1.6.0 (x64-darwin; v8/5.1.281.111; OpenSSL/1.0.2r) node/6.17.1
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Host: kbmapi.mytriton.example.com
+Authorization: Signature <Base64(rsa(sha256($Date)))>
+Connection: close
+---
+{ guid: '75CA077A14C5E45037D7A0740D5602A5',
+  uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081' }
+```
+
+Sample Response:
+
+```
+X-Response-Time: 18
+Server-Name: my.triton.server
+Date: Wed, 06 Nov 2019 15:49:11 GMT
+Connection: close
+X-Request-Received: 1573055351448
+X-Request-Processing-Time: 23
+
+204 No Content
+---
+```
 
 ## Recovery Configuration(s)
 
@@ -1432,27 +1682,14 @@ Note this task will be executed only when cn-agent detects that it's running at 
 - Changefeed, either usig cn-agent or a custom kbm-agent means having publishers and subscribers keeping connections and processes up for something which shouldn't happen very frequently (recovery config modifications).
 
 
-## Development status
+## Development status (v1.x pending)
 
 - `token_serial` bucket needs to be created and end-point to access PIV tokens
   serial should be provided.
 - SAPI configuration for attestation is not present and none of the associated
   functionalities implemented.
 
-### Action items for recovery configurations implementation
-- :white_check_mark: _"Recovery tokens should use their own moray bucket"_: Create recovery tokens bucket. Modify pivtokens model to store each recovery token into that bucket. Update pivtoken model to fetch the tokens from this bucket.
-- _"Implement `POST|GET /pivtokens/:guid/recover`"_ Bring back to existence the `POST /pivtokens/:guid/recover CreateRecoveryToken` end-point. Ditto for `GET /pivtokens/:guid/recover ShowRecoveryToken`. The functionality of do not re-create a given recovery token for a given amount of time currently implemented for `CreatePivtoken` should be bundled with `CreateRecoveryToken` end-point.
-- :white_check_mark: _"Write unit tests for pivtoken & recovery tokens models. Integration tests for PIV tokens end-points."_: make sure we have unit test for each model. Move current pivtokens test to integration.
-- :white_check_mark: _"Every KBMAPI moray PUT should happen using eTags (HA-requirement)"_: Make sure any update attempt happens checking moray's eTags values to prevent overriding of outdated records.
-- :white_check_mark: _"Add recovery configuration bucket/model/validations unit tests"_. Ensure we have at least one "active" recovery configuration.
-- If we want to provide validation for the provided recovery configuration templates, we should either bundle pivy with the KBMAPI zones or Develop our own NodeJS module to read those.
-- _"Implement recovery_configs end-points"_.
-- :white_check_mark: _"A recovery configuration must be required when creating recovery tokens"_. Ensure PIV tokens related end-points _"croak"_ when there isn't at least one recovery configuration available. Update recovery tokens to include the uuid of a configuration. Set proper defaults for currently active configuration.
-- Remove the functionality of automatically generate a new recovery_token each time an HTTP request has been made to `POST /pivtokens/:guid`, since we may want to provide additional details regarding which recovery configuration we want to use for the token we are creating. The `CreatePivtoken` end-point should create a recovery token with the currently "active" configuration.
-- _"Add recovery config transitions buckets/model/validations and unit tests"_.
-- _"Create service to run recovery configuration transitions"_: Create a recovery-config transition service/process which will run in parallel to the KBMAPI main process and will be responsible for orchestrate all the transitions between different recovery configuration statuses.
 
 ### Other action items
 - Provide access to a given PIV Token using CN's UUID in order to make possible for cn-agent task run on CN boot to perform a verify request against KBMAPI. Consider using `GET /pivtokens?uuids=[]` list of CN's UUIDs in a similar way than CNAPI does for these searches.
 - Implement `PUT /tokens/:guid` to allow updates of some PIV Token CN UUID.
-

@@ -17,7 +17,6 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const util = require('util');
 
 
 const test = require('tape');

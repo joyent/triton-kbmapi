@@ -288,6 +288,157 @@ KBMAPI.prototype.getTokenPin = function getTokenPin(opts, cb) {
     });
 };
 
+/*
+ * Recovery Tokens
+ */
+
+/**
+ * List all recovery tokens for the PIVToken with the given GUID
+ * This is a HTTP Signature authenticated request
+ *
+ * @param {Object} opts object containing any list filtering argument
+ *          like `offset`, `limit` ...
+ * - @param {String} guid: (required) the guid of the PIVToken we'd
+ *   like to get a list of recovery tokens
+ * @param {Function} cb: of the form f(err, recovery_tokens, res)
+ */
+KBMAPI.prototype.listRecoveryTokens = function listRecoveryTokens(opts, cb) {
+    assert.object(opts, 'opts');
+    assert.string(opts.guid, 'opts.guid');
+    assert.func(cb, 'cb');
+
+    var reqOpts = Object.assign(opts, {
+        authRequired: true,
+        path: format('/pivtokens/%s/recovery-tokens', opts.guid),
+        method: 'GET'
+    });
+
+    this._request(reqOpts, function reqCb(err, req, res, body) {
+        cb(err, body, res);
+    });
+};
+
+
+/**
+ * Gets the recovery token info.
+ * This is a HTTP Signature authenticated request
+ *
+ * @param {Object} opts object containing:
+ *      - {String} guid: (required) the guid of the PIV token.
+ *      - {String} uuid: (required) the uuid of the recovery token.
+ * @param {Function} callback: of the form f(err, recovery_token, res)
+ */
+KBMAPI.prototype.getRecoveryToken = function getRecoveryToken(opts, cb) {
+    assert.object(opts, 'opts');
+    assert.string(opts.guid, 'opts.guid');
+    assert.uuid(opts.uuid, 'opts.uuid');
+    assert.func(cb, 'cb');
+
+    var reqOpts = Object.assign(opts, {
+        authRequired: true,
+        path: format('/pivtokens/%s/recovery-tokens/%s', opts.guid, opts.uuid),
+        method: 'GET'
+    });
+
+    this._request(reqOpts, function reqCb(err, req, res, body) {
+        cb(err, body, res);
+    });
+};
+
+
+/**
+ * Adds a new recovery token to the given PIVToken
+ * This is a HTTP Signature authenticated request
+ *
+ * @param {Object} opts object containing:
+ *      - {String} guid: (required) the guid of the PIV token.
+ *      - {String} uuid: (optional) the uuid of the recovery token.
+ *      - {Object} params: Any of the recovery token properties (note all
+ *      are optional, even the recovery configuration).
+ * @param {Function} callback: of the form f(err, recovery_token, res)
+ */
+KBMAPI.prototype.createRecoveryToken = function createRecoveryToken(opts, cb) {
+    assert.object(opts, 'opts');
+    assert.string(opts.guid, 'opts.guid');
+    assert.optionalString(opts.uuid, 'opts.uuid');
+    assert.optionalObject(opts.params, 'opts.params');
+    assert.func(cb, 'cb');
+
+    var data = opts.params || {};
+    if (opts.uuid) {
+        data.uuid = opts.uuid;
+    }
+
+    var reqOpts = Object.assign(opts, {
+        path: format('/pivtokens/%s/recovery-tokens', opts.guid),
+        data: data,
+        method: 'POST',
+        authRequired: true
+    });
+
+    this._request(reqOpts, function reqCb(err, req, res, body) {
+        cb(err, body, res);
+    });
+};
+
+
+/**
+ * Updates the given recovery token info.
+ * This is a HTTP Signature authenticated request
+ *
+ * @param {Object} opts object containing:
+ *      - {String} guid: (required) the guid of the PIV token.
+ *      - {String} uuid: (required) the uuid of the recovery token.
+ *      - {Object} params: Any properties to be updated for the recovery
+ *      token like `staged`, `activated` or `expired`.
+ * @param {Function} callback: of the form f(err, recovery_token, res)
+ */
+KBMAPI.prototype.updateRecoveryToken = function updateRecoveryToken(opts, cb) {
+    assert.object(opts, 'opts');
+    assert.string(opts.guid, 'opts.guid');
+    assert.uuid(opts.uuid, 'opts.uuid');
+    assert.object(opts.params, 'opts.params');
+    assert.func(cb, 'cb');
+
+    var reqOpts = Object.assign(opts, {
+        path: format('/pivtokens/%s/recovery-tokens/%s', opts.guid, opts.uuid),
+        data: opts.params,
+        method: 'PUT',
+        authRequired: true
+    });
+
+    this._request(reqOpts, function reqCb(err, req, res, body) {
+        cb(err, body, res);
+    });
+};
+
+/**
+ * Remove the given recovery token.
+ * This is a HTTP Signature authenticated request
+ *
+ * @param {Object} opts object containing:
+ *      - {String} guid: (required) the guid of the PIV token.
+ *      - {String} uuid: (required) the uuid of the recovery token.
+ * @param {Function} callback: of the form f(err, res)
+ */
+KBMAPI.prototype.deleteRecoveryToken = function deleteRecoveryToken(opts, cb) {
+    assert.object(opts, 'opts');
+    assert.string(opts.guid, 'opts.guid');
+    assert.uuid(opts.uuid, 'opts.uuid');
+    assert.func(cb, 'cb');
+
+
+    var reqOpts = Object.assign(opts, {
+        path: format('/pivtokens/%s/recovery-tokens/%s', opts.guid, opts.uuid),
+        method: 'DELETE',
+        authRequired: true
+    });
+
+    this._request(reqOpts, function reqCb(err, req, res) {
+        cb(err, res);
+    });
+};
+
 
 /**
  * KBMAPI Recovery Configurations management

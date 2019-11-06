@@ -33,7 +33,7 @@
   },
   "license": "MPL-2.0",
   "scripts": {
-    "test": "tape ./test/unit/run.js",
-    "coverage": "istanbul cover ./test/unit/run.js"
+    "test": "tape ./test/run.js",
+    "coverage": "istanbul cover ./test/run.js"
   }
 }
