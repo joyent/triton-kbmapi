@@ -34,6 +34,6 @@
   "license": "MPL-2.0",
   "scripts": {
     "test": "tape ./test/run.js",
-    "coverage": "nyc cover ./test/run.js"
+    "coverage": "nyc --reporter=lcov npm test"
   }
 }

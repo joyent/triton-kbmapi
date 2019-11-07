@@ -18,7 +18,7 @@ NAME		:= kbmapi
 # Tools
 #
 
-ISTANBUL	:= node_modules/.bin/nyc
+NYC	:= node_modules/.bin/nyc
 FAUCET		:= node_modules/.bin/faucet
 
 #
@@ -84,7 +84,7 @@ PATH		:= $(NODE_INSTALL)/bin:/opt/local/bin:${PATH}
 all: $(SMF_MANIFESTS) | $(NPM_EXEC) sdc-scripts
 	$(NPM) install
 
-$(ISTANBUL): | $(NPM_EXEC)
+$(NYC): | $(NPM_EXEC)
 	$(NPM) install
 
 $(FAUCET): | $(NPM_EXEC)
@@ -93,8 +93,8 @@ $(FAUCET): | $(NPM_EXEC)
 CLEAN_FILES += ./node_modules/tape
 
 .PHONY: test
-test: $(ISTANBUL) $(FAUCET)
-	$(NODE) $(ISTANBUL) cover --print none test/run.js | $(FAUCET)
+test: $(NYC) $(FAUCET)
+	$(NPM) run coverage | $(FAUCET)
 
 #
 # Packaging targets
