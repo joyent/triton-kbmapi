@@ -426,6 +426,25 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    suite.test('Verify Recovery tokens have been expired', function (t) {
+        CLIENT.clean();
+        CLIENT.getTokenPin({
+            guid: TOKENS[0].guid,
+            privkey: privKeys[0],
+            pubkey: TOKENS[0].pubkeys['9e']
+        }, function (err, pivtoken, res) {
+            t.ifError(err, 'verify pivtoken error');
+            t.equal(200, res.statusCode, 'verify pivtoken status');
+            t.ok(pivtoken.recovery_tokens, 'verify pivtoken tokens');
+            t.equal(3, pivtoken.recovery_tokens.length, 'tokens length');
+            t.ok(pivtoken.recovery_tokens[0].expired, 'old token expired');
+            t.ok(pivtoken.recovery_tokens[1].expired, 'old token expired');
+            t.notOk(pivtoken.recovery_tokens[2].expired,
+                'new token not expired');
+            t.end();
+        });
+    });
+
     suite.test('Delete recovery token', function (t) {
         CLIENT.clean();
         CLIENT.deleteRecoveryToken({

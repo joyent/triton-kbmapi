@@ -895,6 +895,16 @@ convenience end-points related to the recovery tokens associated to the given PI
 
 All the recovery token requests are authenticated using the 9e key of the PIV token the recovery token(s) belong to.
 
+Creating/updating recovery tokens have some rules regarding existing recovery tokens for a given PIV Token:
+
+- When a new recovery token is "created", if is there any existing recovery
+  token for the same PIV Token which hasn't been yet staged or activated,
+  it will be immediately expired.
+- When a new recovery token is "staged", if is there any existing recovery
+  token which hasn't yet been staged, it'll be immediately expired.
+- When a new recovery token is "activated", if is there any existing
+  recovery token which was active, it'll be immediately expired.
+
 #### ListRecoveryTokens (GET /pivtokens/:guid/recovery-tokens)
 
 List all the existing recovery tokens for the given PIV Token `:guid`.
