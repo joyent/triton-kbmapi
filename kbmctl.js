@@ -9,4 +9,4 @@
  */
 'use strict';
 
-require('./cli').main();
+require('./lib/cli').main();

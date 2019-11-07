@@ -11,6 +11,6 @@
  */
 'use strict';
 
-require('../cli').main();
+require('../lib/cli').main();
 
 // vim: set softtabstop=4 shiftwidth=4:

@@ -18,7 +18,7 @@ NAME		:= kbmapi
 # Tools
 #
 
-ISTANBUL	:= node_modules/.bin/istanbul
+ISTANBUL	:= node_modules/.bin/nyc
 FAUCET		:= node_modules/.bin/faucet
 
 #
@@ -27,7 +27,7 @@ FAUCET		:= node_modules/.bin/faucet
 #
 DOC_FILES	= index.md
 JSON_FILES	= package.json
-ESLINT_FILES	:= $(shell find lib test -name '*.js') tools/bashstyle
+ESLINT_FILES	:= $(shell find lib client test -name '*.js') tools/bashstyle
 ESLINT		= ./node_modules/.bin/eslint
 
 # Not yet

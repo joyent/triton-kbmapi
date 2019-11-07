@@ -11,6 +11,7 @@ cscope.po.out
 cscope.out
 man
 coverage/*
+.nyc_output/*
 kbmapi.vim
 config.json
 smf/manifests/*.xml
