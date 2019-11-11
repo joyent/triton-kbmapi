@@ -550,6 +550,32 @@ function getRecoveryConfiguration(opts, cb) {
 
 
 /**
+ * List all recovery tokens associated with the given recovery configuration
+ *
+ * @param {Object} opts object containing any list filtering argument
+ *          like `offset`, `limit`, `filter` ...
+ *      - {String} uuid: (required) the uuid of the recovery configuration.
+ * @param {Function} cb: of the form f(err, recovery_tokens, res)
+ */
+KBMAPI.prototype.listRecoveryConfigurationTokens =
+function listRecoveryConfigurationTokens(opts, cb) {
+    assert.object(opts, 'opts');
+    assert.func(cb, 'cb');
+
+    var reqOpts = Object.assign(opts, {
+        authRequired: false,
+        method: 'GET',
+        path: format('/recovery-configurations/%s/recovery-tokens', opts.uuid),
+        query: opts
+    });
+
+    this._request(reqOpts, function reqCb(err, req, res, body) {
+        cb(err, body, res);
+    });
+};
+
+
+/**
  * Updates a recovery configuration
  *
  * @param {Object} opts object containing:
