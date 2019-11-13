@@ -459,6 +459,86 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+
+    suite.test('Create another recovery token', function (t) {
+        CLIENT.clean();
+        CLIENT.createRecoveryToken({
+            guid: TOKENS[0].guid,
+            params: {
+                recovery_configuration: RECOVERY_CONFIG.key()
+            },
+            privkey: privKeys[0],
+            pubkey: TOKENS[0].pubkeys['9e']
+        }, function createCb(err, rtk, res) {
+            t.ifError(err, 'Create recovery token error');
+            t.equal(201, res.statusCode, 'Create recovery token status');
+            t.ok(rtk, 'Recovery token created');
+            t.notOk(rtk.staged, 'new token should not be staged');
+            REC_TOKEN = rtk;
+            t.end();
+        });
+    });
+
+    suite.test('Update recovery tokens (stage)', function (t) {
+        CLIENT.clean();
+        // This is intentionally ignored at the client level, since it should
+        // be used from kbmadm, not kbmctl.
+        CLIENT.client.put({
+            path: util.format('/pivtokens/%s/recovery-tokens', TOKENS[0].guid)
+        }, {
+            zpool_recovery: {
+                staged: RECOVERY_CONFIG.key()
+            },
+            recovery_token: REC_TOKEN.uuid
+        }, function putCb(putErr, _req, putRes, _body) {
+            t.ifError(putErr, 'update tokens error');
+            t.equal(200, putRes.statusCode, 'expected success response');
+
+            CLIENT.listRecoveryTokens({
+                guid: TOKENS[0].guid,
+                privkey: privKeys[0],
+                pubkey: TOKENS[0].pubkeys['9e']
+            }, function listCb(err, rTks, res) {
+                t.ifError(err, 'ls recovery tokens err');
+                t.ok(rTks, 'recovery tokens list');
+                t.equal(200, res.statusCode, 'ls rec tokens status');
+                var latest = rTks.pop();
+                t.ok(latest.staged, 'Token has been staged');
+                t.end();
+            });
+        });
+    });
+
+    suite.test('Update recovery tokens (activate)', function (t) {
+        CLIENT.clean();
+        // This is intentionally ignored at the client level, since it should
+        // be used from kbmadm, not kbmctl.
+        CLIENT.client.put({
+            path: util.format('/pivtokens/%s/recovery-tokens', TOKENS[0].guid)
+        }, {
+            zpool_recovery: {
+                staged: RECOVERY_CONFIG.key(),
+                active: RECOVERY_CONFIG.key()
+            },
+            recovery_token: REC_TOKEN.uuid
+        }, function putCb(putErr, _req, putRes, _body) {
+            t.ifError(putErr, 'update tokens error');
+            t.equal(200, putRes.statusCode, 'expected success response');
+
+            CLIENT.listRecoveryTokens({
+                guid: TOKENS[0].guid,
+                privkey: privKeys[0],
+                pubkey: TOKENS[0].pubkeys['9e']
+            }, function listCb(err, rTks, res) {
+                t.ifError(err, 'ls recovery tokens err');
+                t.ok(rTks, 'recovery tokens list');
+                t.equal(200, res.statusCode, 'ls rec tokens status');
+                var latest = rTks.pop();
+                t.ok(latest.activated, 'Token has been activated');
+                t.end();
+            });
+        });
+    });
     suite.test('Delete pivtoken requires auth', function tDelTkAuthRequired(t) {
         CLIENT.clean();
         mod_token.delete(t, {

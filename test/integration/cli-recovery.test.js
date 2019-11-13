@@ -324,6 +324,7 @@ test('Initial setup', function tInitialSetup(suite) {
             var lines = stdout.trim().split('\n');
             t.equal(2, lines.length, 'Expected list output');
             lines.forEach(function (line) {
+                line = line.split(/\s+/);
                 if (line[0] === REC_CFG.uuid) {
                     t.equal(0, Number(line[1]), 'expected staged tokens');
                     t.equal(0, Number(line[2]), 'expected active tokens');
