@@ -267,7 +267,7 @@ KbmApiTransitioner.prototype.prune = function prune() {
         const duration = self.config.historyDuration * 1000;
         const dateLimit = new Date(Date.now() - duration).toISOString();
 
-        const filter = util.format('active_range:overlaps:[,%s]', dateLimit);
+        const filter = util.format('(active_range:overlaps:=[,%s])', dateLimit);
         const bucket = models.pivtoken_history.bucket().name;
         // Delete from pivtoken-history:
         self.moray.deleteMany(bucket, filter, function delCb(err) {
@@ -282,7 +282,7 @@ KbmApiTransitioner.prototype.prune = function prune() {
                     throw dErr;
                 }
 
-                setTimeout(pruneHist, self.config.pollInterval);
+                setTimeout(pruneHist, self.config.pollInterval * 1000);
             });
         });
     }
@@ -306,7 +306,7 @@ KbmApiTransitioner.prototype.run = function run() {
                 return;
             }
             self.runTimeout =
-                setTimeout(runTransition, self.config.pollInterval);
+                setTimeout(runTransition, self.config.pollInterval * 1000);
         });
     }
     runTransition();
