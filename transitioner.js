@@ -45,6 +45,9 @@
  *     active recovery configuration on completion, (and all the associated
  *     PIVTokens).
  *
+ * Additionally, this service will also remove pivtoken-history records older
+ * than KBMAPI_HISTORY_DURATION setting.
+ *
  */
 const util = require('util');
 
@@ -232,6 +235,16 @@ KbmApiTransitioner.prototype._cleanup = function (callback) {
         self.usageTimer = null;
     }
 
+    if (self.runTimeout) {
+        clearTimeout(self.runTimeout);
+        self.runTimeout = null;
+    }
+
+    if (self.pruneTimeout) {
+        clearTimeout(self.pruneTimeout);
+        self.pruneTimeout = null;
+    }
+
     if (self.cnapi) {
         self.cnapi.close();
     }
@@ -242,9 +255,64 @@ KbmApiTransitioner.prototype._cleanup = function (callback) {
     }
 };
 
-// TODO: Will rename this one to "runATransition" and "run" will be
-// something calling it while needed, then returning.
-KbmApiTransitioner.prototype.run = function (cb) {
+KbmApiTransitioner.prototype.prune = function prune() {
+    var self = this;
+    function pruneHist() {
+        if (self.pruneTimeout) {
+            clearTimeout(self.pruneTimeout);
+            self.pruneTimeout = null;
+        }
+
+        // Expected to be in seconds
+        const duration = self.config.historyDuration * 1000;
+        const dateLimit = new Date(Date.now() - duration).toISOString();
+
+        const filter = util.format('active_range:overlaps:[,%s]', dateLimit);
+        const bucket = models.pivtoken_history.bucket().name;
+        // Delete from pivtoken-history:
+        self.moray.deleteMany(bucket, filter, function delCb(err) {
+            if (err) {
+                throw err;
+            }
+            // We'll delete old recovery tokens too:
+            const b = models.recovery_token.bucket().name;
+            const f = util.format('(expired<=%s)', dateLimit);
+            self.moray.deleteMany(b, f, function deCb(dErr) {
+                if (dErr) {
+                    throw dErr;
+                }
+
+                setTimeout(pruneHist, self.config.pollInterval);
+            });
+        });
+    }
+    pruneHist();
+};
+
+KbmApiTransitioner.prototype.run = function run() {
+    var self = this;
+
+    function runTransition() {
+        if (self.runTimeout) {
+            clearTimeout(self.runTimeout);
+            self.runTimeout = null;
+        }
+        self.runTransition(function runTrCb(runTrErr, moreTrs) {
+            if (runTrErr) {
+                throw runTrErr;
+            }
+            if (moreTrs) {
+                runTransition();
+                return;
+            }
+            self.runTimeout =
+                setTimeout(runTransition, self.config.pollInterval);
+        });
+    }
+    runTransition();
+};
+
+KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
     var self = this;
     var context = {};
     vasync.pipeline({
@@ -812,19 +880,30 @@ if (require.main === module) {
         });
 
         transitioner.on('initialized', function started() {
-            transitioner.run(function runCb(runErr, _runRes) {
-                if (runErr) {
-                    throw runErr;
-                }
+            transitioner.prune();
+            transitioner.run();
 
                 // Run transitions.
                 // Then stop the transitioner until something else makes it
                 // run again.
-                transitioner.stop(function stoped() {
-                    process.exit(0);
-                });
+        });
+
+        process.on('SIGINT', function () {
+            console.log('Got SIGINT. Waiting for transitioner to finish.');
+            transitioner.stop(function stoped() {
+                process.exit(0);
             });
         });
+
+        process.on('SIGHUP', function () {
+            console.log('Got SIGHUP. Running next transition immediately.');
+            // If there's no timeout set, it's already running transitions,
+            // otherwise, let's run:
+            if (transitioner.runTimeout) {
+                transitioner.run();
+            }
+        });
+
         transitioner.start();
     } catch (err) {
         exitOnError(err);

@@ -18,6 +18,23 @@
         "maxSockets": 10,
         "url": "http://{{{CNAPI_SERVICE}}}"
     },
-    "instanceUuid": "{{auto.ZONENAME}}",
-    "recoveryTokenDuration": 900
+    {{#KBMAPI_POLL_INTERVAL}}
+    "pollInterval": {{{KBMAPI_POLL_INTERVAL}}},
+    {{/KBMAPI_POLL_INTERVAL}}
+    {{^KBMAPI_POLL_INTERVAL}}
+    "pollInterval": 900,
+    {{/KBMAPI_POLL_INTERVAL}}
+    {{#KBMAPI_RECOVERY_TOKEN_DURATION}}
+    "recoveryTokenDuration": "{{{KBMAPI_RECOVERY_TOKEN_DURATION}}}",
+    {{/KBMAPI_RECOVERY_TOKEN_DURATION}}
+    {{^KBMAPI_RECOVERY_TOKEN_DURATION}}
+    "recoveryTokenDuration": 86400,
+    {{/KBMAPI_RECOVERY_TOKEN_DURATION}}
+    {{#KBMAPI_HISTORY_DURATION}}
+    "historyDuration": "{{{KBMAPI_HISTORY_DURATION}}}",
+    {{/KBMAPI_HISTORY_DURATION}}
+    {{^KBMAPI_HISTORY_DURATION}}
+    "historyDuration": 1296000,
+    {{/KBMAPI_HISTORY_DURATION}}
+    "instanceUuid": "{{auto.ZONENAME}}"
 }
