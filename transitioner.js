@@ -282,6 +282,11 @@ KbmApiTransitioner.prototype.prune = function prune() {
                     throw dErr;
                 }
 
+                self.log.debug({
+                    history_filter: filter,
+                    token_filter: f
+                }, 'Prune run.');
+
                 setTimeout(pruneHist, self.config.pollInterval * 1000);
             });
         });
