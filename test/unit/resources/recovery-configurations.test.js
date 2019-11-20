@@ -192,7 +192,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Run not yet existing stage transition', function (t) {
-        TRANSITIONER.run(function runCb(runErr, pendingTrs) {
+        TRANSITIONER.runTransition(function runCb(runErr, pendingTrs) {
             t.ifError(runErr, 'unexpected transitioner err');
             t.notOk(pendingTrs, 'should not be pending transtions');
             t.end();
@@ -240,7 +240,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Run canceled stage transition', function (t) {
-        TRANSITIONER.run(function runCb(runErr, pendingTrs) {
+        TRANSITIONER.runTransition(function runCb(runErr, pendingTrs) {
             t.ifError(runErr, 'unexpected transitioner err');
             t.notOk(pendingTrs, 'should not be pending transtions');
             t.end();
@@ -268,7 +268,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Run stage transition', function (t) {
-        TRANSITIONER.run(function runCb(runErr, runRes) {
+        TRANSITIONER.runTransition(function runCb(runErr, runRes) {
             t.ifError(runErr, 'transitioner run error');
             t.equal(runRes.length, 0, 'transitioner run results');
             t.end();
@@ -299,7 +299,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Run activate PIVToken transition', function (t) {
-        TRANSITIONER.run(function runCb(runErr, runRes) {
+        TRANSITIONER.runTransition(function runCb(runErr, runRes) {
             t.ifError(runErr, 'transitioner run error');
             t.equal(runRes.length, 0, 'transitioner run results');
             t.end();
@@ -353,7 +353,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
     suite.test('Run activate transition', function (t) {
-        TRANSITIONER.run(function runCb(runErr, runRes) {
+        TRANSITIONER.runTransition(function runCb(runErr, runRes) {
             t.ifError(runErr, 'transitioner run error');
             t.equal(runRes.length, 0, 'transitioner run results');
             t.end();
