@@ -29,7 +29,7 @@ mkdir -p /var/smartdc/kbmapi
 
 # Add build/node/bin and node_modules/.bin to PATH
 echo "" >>/root/.profile
-echo "export PATH=\$PATH:/opt/smartdc/$role/node/bin:/opt/smartdc/$role/node_modules/.bin:/opt/smartdc/$role/bin" >>/root/.profile
+echo "export PATH=\$PATH:/opt/smartdc/$role/build/node/bin:/opt/smartdc/$role/node_modules/.bin:/opt/smartdc/$role/bin" >>/root/.profile
 
 echo "Adding log rotation"
 #sdc_log_rotation_add amon-agent /var/svc/log/*amon-agent*.log 1g
