@@ -22,6 +22,44 @@ been warned.
 
     make all
 
+### Using Yubikeys from COAL
+
+In order to be able to use a Yubikey from COAL the following properties need
+to be added to the `.vmx` file of the VM we want to use it:
+
+```
+usb.generic.allowHID = "TRUE"
+usb.generic.allowLastHID = "TRUE"
+```
+
+These files are usually `netboot.vmx` for Compute Node COAL images and
+`USB-headnode.vmx` of the SDC Headnode.
+
+Once these lines have been added there will be two available options for a
+given pivy-tool:
+
+```
+Shared Yubico Yubikey OTP+FIDO+CCID
+Yubico.com Yubikey OTP+FIDO+CCID
+```
+
+You need to pick the one without "Shared". It will say that the Yubikey will
+not be useable by the system during the time it's being user by the guest OS,
+which is exactly what we need.
+
+Also, note that by design a Yubikey needs to go through a factory reset in
+order to be useable as CN key for KBMAPI.
+
+You'll need to do something like lock both PIN and PUK before you can call
+`pivy-tool factory-reset`. (Can lock by running `pivy-tool change-pin` entering
+a wrong value 3 times and `pivy-tool change-puk` another 3 times). Note you
+may need to un-plug/plug the YK once the factory reset is complete.
+
+The reason for this is that the idea with how kbmapi sets it up, is once it
+initializes the YK, it has it generate all the keys, and then it discards the
+admin key and puk (which is different from the pin) to effectively seal the YK
+(i.e. can't make any changes after setup).
+
 ## Test
 
     make test
@@ -89,8 +127,8 @@ Use this at your own risk!
 
 ## Documentation
 
-Docs would be nice... There's a basic description of the current API in docs/.
-That is _all_ subject to change, and should not be considered final at this time.
+See docs/index.md for a detailed API description. Note the API is on an early
+stage and subject to changes.
 
 To update the guidelines, edit "docs/index.md" and run `make docs`
 to update "docs/index.html". Works on either SmartOS or Mac OS X.

@@ -16,10 +16,13 @@
 
 // TODO: test listing by multiple pivtokens guids
 
+const fs = require('fs');
+const path = require('path');
 const VError = require('verror');
 
-const mod_recovery_token = require(
-    '../../../lib/models/recovery-token');
+const models = require('../../../lib/models/');
+const mod_recovery_configuration = models.recovery_configuration;
+const mod_recovery_token = models.recovery_token;
 
 const mod_log = require('../../lib/log');
 const mod_server = require('../../lib/server');
@@ -30,6 +33,8 @@ const log_child = mod_log.child({
 
 const test = require('tape');
 
+const eboxTpl = fs.readFileSync(path.resolve(
+    __dirname, '../../fixtures/backup'), 'ascii');
 
 test('RecoveryToken model test', function setup(suite) {
     mod_server.setupMoray(log_child, function setupCb(setupErr, moray) {
@@ -43,6 +48,42 @@ test('RecoveryToken model test', function setup(suite) {
         var UUID;
         var TOKEN;
         var ETAG;
+        var REC_CFG;
+
+
+        suite.test('Init kbmapi_recovery_configs bucket', function bucket(t) {
+            models.init({ moray: moray }, function initCb(err) {
+                t.ifError(err, 'Init bucket error');
+                if (!err) {
+                    BUCKET = true;
+                }
+                t.end();
+            });
+        });
+
+        suite.test('Create RecoveryConfiguration', function doCreate(t) {
+            if (!BUCKET) {
+                t.comment('Skipping tests due to previous failure');
+                t.end();
+                return;
+            }
+
+            mod_recovery_configuration.create({
+                moray: moray,
+                params: {
+                    template: eboxTpl
+                }
+            }, function createCb(createErr, recCfg) {
+                t.ifError(createErr, 'Create Error');
+                t.ok(recCfg.params, 'recovery configuration params');
+                t.ok(recCfg.params.uuid, 'recovery configuration uuid');
+                REC_CFG = recCfg;
+                t.ok(recCfg.params.template, 'recovery configuration template');
+                t.ok(recCfg.params.created, 'recovery configuration created');
+                t.ok(recCfg.etag, 'recovery configuration etag');
+                t.end();
+            });
+        });
 
         suite.test('Init kbmapi_recovery_tokens bucket', function bucket(t) {
             mod_recovery_token.init(moray, function initCb(err) {
@@ -66,7 +107,7 @@ test('RecoveryToken model test', function setup(suite) {
                 params: {
                     pivtoken: '75CA077A14C5E45037D7A0740D5602A5',
                     recovery_configuration:
-                        'f85b894e-d02c-5b1c-b2ea-0564ef55ee24'
+                        REC_CFG.key()
                 }
             }, function createCb(createErr, recTk) {
                 t.ifError(createErr, 'Create Error');
@@ -77,6 +118,7 @@ test('RecoveryToken model test', function setup(suite) {
                 TOKEN = recTk.params.token;
                 t.ok(recTk.params.created, 'recovery token created');
                 t.ok(recTk.etag, 'recovery token etag');
+                t.ok(recTk.template, 'recovery configuration template');
                 ETAG = recTk.etag;
                 t.end();
             });
