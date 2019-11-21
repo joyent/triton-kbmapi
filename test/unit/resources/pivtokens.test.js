@@ -265,7 +265,6 @@ test('Initial setup', function tInitialSetup(suite) {
     suite.test('Re-create pivtoken with valid privkey', function privKeyOk(t) {
         CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
-        delete tk.recovery_tokens[0].template;
         mod_token.create(t, {
             params: Object.assign({}, tk, {
                 recovery_configuration: RECOVERY_CONFIG.params.uuid
@@ -335,7 +334,6 @@ test('Initial setup', function tInitialSetup(suite) {
     suite.test('Get pivtoken with pin', function tGetTokenPin(t) {
         CLIENT.clean();
         var tok = TOKENS[1];
-        delete tok.recovery_tokens[0].template;
 
         mod_token.getPin(t, {
             params: {
