@@ -212,7 +212,7 @@ test('Initial setup', function tInitialSetup(suite) {
             params: tk,
             expErr: {
                 code: 'InvalidParameters',
-                message: 'invalid parameter',
+                message: 'invalid recovery_configuration parameter',
                 errors: [ {
                     field: 'recovery_configuration',
                     code: 'InvalidParameter',
@@ -358,7 +358,18 @@ test('Initial setup', function tInitialSetup(suite) {
             params: {},
             deepEqual: true,
             present: tokens
+        }, function listCb(_err, body) {
+            t.ok(body, 'List pivtokens body');
+            t.ok(Array.isArray(body), 'array of pivtokens');
+            t.ok(Array.isArray(body[0].recovery_tokens),
+                'array of recovery tokens');
+            var rTks = body[0].recovery_tokens;
+            rTks.forEach(function (r) {
+                t.ok(typeof r.token === 'undefined',
+                    'Token is a sensitive field');
             });
+            t.end();
+        });
     });
 
     suite.test('List recovery tokens requires auth', function (t) {
