@@ -25,10 +25,6 @@ const mod_token = require('../../lib/token');
 const mod_server = require('../../lib/server');
 const test = require('tape');
 
-// TODO: Replace this with recovery-configuration endpoint:
-const models = require('../../../lib/models');
-const mod_recovery_configuration = models.recovery_configuration;
-
 const eboxTpl = fs.readFileSync(path.resolve(
     __dirname, '../../fixtures/backup'), 'ascii');
 
@@ -118,31 +114,32 @@ test('Initial setup', function tInitialSetup(suite) {
 
 
     suite.test('Create RecoveryConfiguration', function doCreate(t) {
-        mod_recovery_configuration.create({
-            moray: MORAY,
-            params: {
-                template: eboxTpl
-            }
-        }, function createCb(createErr, recCfg) {
-            t.ifError(createErr, 'Create Error');
-            t.ok(recCfg.params, 'recovery configuration params');
-            t.ok(recCfg.params.uuid, 'recovery configuration uuid');
-            RECOVERY_CONFIG = recCfg;
+        CLIENT.clean();
+        CLIENT.createRecoveryConfiguration({
+            template: eboxTpl
+        }, function createCb(err, recoveryConfig, res) {
+            t.ifError(err, 'create recovery configuration error');
+            t.ok(recoveryConfig, 'recoveryConfig');
+            t.ok(recoveryConfig.uuid, 'recoveryConfig UUID');
+            t.ok(recoveryConfig.created, 'recoveryConfig created');
+            RECOVERY_CONFIG = recoveryConfig;
+            t.equal(res.statusCode, 201, 'create rec-cfg response code');
             t.end();
         });
     });
 
-    suite.test('Create AnotherRecoveryConfiguration', function doCreate(t) {
-        mod_recovery_configuration.create({
-            moray: MORAY,
-            params: {
-                template: anotherTpl
-            }
-        }, function createCb(createErr, recCfg) {
-            t.ifError(createErr, 'Create Error');
-            t.ok(recCfg.params, 'recovery configuration params');
-            t.ok(recCfg.params.uuid, 'recovery configuration uuid');
-            ANOTHER_CONFIG = recCfg;
+
+    suite.test('Create Another RecoveryConfiguration', function doCreate(t) {
+        CLIENT.clean();
+        CLIENT.createRecoveryConfiguration({
+            template: anotherTpl
+        }, function createCb(err, recoveryConfig, res) {
+            t.ifError(err, 'create recovery configuration error');
+            t.ok(recoveryConfig, 'recoveryConfig');
+            t.ok(recoveryConfig.uuid, 'recoveryConfig UUID');
+            t.ok(recoveryConfig.created, 'recoveryConfig created');
+            ANOTHER_CONFIG = recoveryConfig;
+            t.equal(res.statusCode, 201, 'create rec-cfg response code');
             t.end();
         });
     });
@@ -234,7 +231,7 @@ test('Initial setup', function tInitialSetup(suite) {
             t.test('Create token GUID ' + aToken.guid, function doCreate(t3) {
                 mod_token.create(t3, {
                     params: Object.assign({}, aToken, {
-                        recovery_configuration: RECOVERY_CONFIG.params.uuid
+                        recovery_configuration: RECOVERY_CONFIG.uuid
                     }),
                     exp: aToken,
                     privkey: aKey
@@ -267,7 +264,7 @@ test('Initial setup', function tInitialSetup(suite) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         mod_token.create(t, {
             params: Object.assign({}, tk, {
-                recovery_configuration: RECOVERY_CONFIG.params.uuid
+                recovery_configuration: RECOVERY_CONFIG.uuid
             }),
             exp: tk,
             privkey: privKeys[0]
@@ -281,7 +278,7 @@ test('Initial setup', function tInitialSetup(suite) {
         delete tk.recovery_tokens[0].template;
         mod_token.create(t, {
             params: Object.assign({}, tk, {
-                recovery_configuration: ANOTHER_CONFIG.params.uuid
+                recovery_configuration: ANOTHER_CONFIG.uuid
             }),
             expCode: 200,
             partialExp: {
@@ -480,7 +477,7 @@ test('Initial setup', function tInitialSetup(suite) {
         CLIENT.createRecoveryToken({
             guid: TOKENS[0].guid,
             params: {
-                recovery_configuration: RECOVERY_CONFIG.key()
+                recovery_configuration: RECOVERY_CONFIG.uuid
             },
             privkey: privKeys[0],
             pubkey: TOKENS[0].pubkeys['9e']
@@ -502,7 +499,7 @@ test('Initial setup', function tInitialSetup(suite) {
             path: util.format('/pivtokens/%s/recovery-tokens', TOKENS[0].guid)
         }, {
             zpool_recovery: {
-                staged: RECOVERY_CONFIG.key()
+                staged: RECOVERY_CONFIG.uuid
             },
             recovery_token: REC_TOKEN.uuid
         }, function putCb(putErr, _req, putRes, _body) {
@@ -532,8 +529,8 @@ test('Initial setup', function tInitialSetup(suite) {
             path: util.format('/pivtokens/%s/recovery-tokens', TOKENS[0].guid)
         }, {
             zpool_recovery: {
-                staged: RECOVERY_CONFIG.key(),
-                active: RECOVERY_CONFIG.key()
+                staged: RECOVERY_CONFIG.uuid,
+                active: RECOVERY_CONFIG.uuid
             },
             recovery_token: REC_TOKEN.uuid
         }, function putCb(putErr, _req, putRes, _body) {
@@ -624,7 +621,7 @@ test('Initial setup', function tInitialSetup(suite) {
         CLIENT.createToken({
             guid: tk.guid,
             token: Object.assign({}, tk, {
-                recovery_configuration: RECOVERY_CONFIG.params.uuid
+                recovery_configuration: RECOVERY_CONFIG.uuid
             }),
             pivytool: pivytool
         }, function createTkCb(err, body, response) {
@@ -637,7 +634,7 @@ test('Initial setup', function tInitialSetup(suite) {
             CLIENT.createToken({
                 guid: tk.guid,
                 token: Object.assign({}, tk, {
-                    recovery_configuration: RECOVERY_CONFIG.params.uuid
+                    recovery_configuration: RECOVERY_CONFIG.uuid
                 }),
                 pivytool: pivytool
             }, function reCreateTkCb(err2, body2, response2) {
@@ -682,7 +679,7 @@ test('Initial setup', function tInitialSetup(suite) {
                 guid: TOKENS[1].guid,
                 recovery_token: RECOVERY_TOKEN,
                 token: Object.assign({}, OTHER_TOKEN, {
-                    recovery_configuration: RECOVERY_CONFIG.params.uuid
+                    recovery_configuration: RECOVERY_CONFIG.uuid
                 })
             },
             exp: OTHER_TOKEN
