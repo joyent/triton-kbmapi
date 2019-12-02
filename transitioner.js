@@ -913,6 +913,8 @@ if (require.main === module) {
     try {
         const mod_config = require('./lib/config');
         const config = mod_config.load(__dirname + '/config.json');
+        const CNAPI = require('sdc-clients').CNAPI;
+        config.cnapi = new CNAPI(config.cnapi);
         var transitioner = new KbmApiTransitioner({
             config: config,
             log: log
