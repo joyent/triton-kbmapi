@@ -272,14 +272,20 @@ KbmApiTransitioner.prototype.prune = function prune() {
         // Delete from pivtoken-history:
         self.moray.deleteMany(bucket, filter, function delCb(err) {
             if (err) {
-                throw err;
+                self.log.error({
+                    err: err,
+                    filter: filter
+                }, 'Error removing pivtoken history records');
             }
             // We'll delete old recovery tokens too:
             const b = models.recovery_token.bucket().name;
             const f = util.format('(expired<=%s)', dateLimit);
             self.moray.deleteMany(b, f, function deCb(dErr) {
                 if (dErr) {
-                    throw dErr;
+                    self.log.error({
+                        err: err,
+                        filter: f
+                    }, 'Error recovery token expired records');
                 }
 
                 self.log.debug({
@@ -304,7 +310,24 @@ KbmApiTransitioner.prototype.run = function run() {
         }
         self.runTransition(function runTrCb(runTrErr, moreTrs) {
             if (runTrErr) {
-                throw runTrErr;
+                self.log.error({err: runTrErr}, 'Run transition error');
+                models.recovery_configuration_transition.update({
+                    moray: self.moray,
+                    log: self.log,
+                    key: self.currTr.key(),
+                    val: {
+                        aborted: true,
+                        finished: new Date().toISOString()
+                    }
+                }, function upCb(upErr) {
+                    self.currTr = null;
+                    if (upErr) {
+                        self.log.error({err: upErr}, 'Abort transition error');
+                    }
+                    self.runTimeout =
+                        setTimeout(runTransition,
+                            self.config.pollInterval * 1000);
+                });
             }
             if (moreTrs) {
                 runTransition();
@@ -344,7 +367,7 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                         }, 'No pending transitions found'));
                         return;
                     }
-                    ctx.currTr = lsItems.shift();
+                    self.currTr = ctx.currTr = lsItems.shift();
                     ctx.pendingTrs = lsItems;
                     self.log.debug({
                         current_transition: ctx.currTr,
@@ -360,6 +383,10 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                     next();
                     return;
                 }
+
+                self.log.debug({
+                    transition: ctx.currTr
+                }, 'Finishing aborted transition');
 
                 models.recovery_configuration_transition.update({
                     moray: self.moray,
@@ -673,28 +700,35 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                                 cn_uuid: item
                             }, funcs: [
                                 function createTask(arg, nextStep) {
-                                    var trParams = {
-                                        action: ctx.currTr.params.name
-                                    };
-                                    var pivGuid = ctx.pivtokensByCnUuid[item]
+                                    const pivGuid = ctx.pivtokensByCnUuid[item]
                                         .guid;
-                                    var recToken = ctx.recTokensByGuid[pivGuid];
-
-                                    trParams.recovery_token = {
-                                        uuid: recToken.params.uuid
+                                    const trParams = {
+                                        action: ctx.currTr.params.name,
+                                        pivtoken: pivGuid,
+                                        recovery_uuid:
+                                            ctx.recoveryConfig.params.uuid,
+                                        template:
+                                            ctx.recoveryConfig.params.template,
+                                        token:
+                                            ctx.recTokensByGuid[pivGuid].params
+                                                .token
                                     };
+                                    self.log.debug({
+                                        tr_params: trParams
+                                    }, 'CNAPI Task params');
 
-                                    if (trParams.action === 'stage') {
-                                        trParams.template =
-                                            ctx.recoveryConfig.params.template;
-                                        trParams.recovery_token.token =
-                                            recToken.params.token;
-                                    }
                                     // We may want to add a proper method to
                                     // CNAPI client in the future:
-                                    self.cnapi.post(arg.cn_uuid, trParams,
+                                    const rPath = util.format(
+                                        '/servers/%s/recovery-config', item);
+                                    self.cnapi.post(rPath, trParams,
                                         function taskCb(taskErr, task) {
                                             if (taskErr) {
+                                                self.log.error({
+                                                    err: taskErr,
+                                                    path: rPath,
+                                                    params: trParams
+                                                }, 'Error creating Task');
                                                 nextStep(taskErr);
                                                 return;
                                             }
@@ -733,8 +767,8 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                         };
 
                         if (errs) {
-                            val.errs = ctx.currTr.params.errs || [];
-                            val.errs.concat(errs);
+                            val.errs = errs.concat(
+                                ctx.currTr.params.errs || []);
                         }
 
                         val.completed = (ctx.currTr.params.completed || [])

@@ -41,12 +41,14 @@ of a CN with the data from a new PIV token.
 When PIV tokens are deleted or reinitialized, the old PIV token data should be kept in a
 KBMAPI-maintained history.  This history maintains the PIV token data for an
 amount of time defined by the `KBMAPI_HISTORY_DURATION` SAPI variable.  The
-default shall be 15 days.  The purpose is to provide a time-limited backup
+default is 15 days.  The purpose is to provide a time-limited backup
 against accidental PIV token deletion.
 
 #### Attestation
 
-NOTE: Attestation or token preloading are not implemented for KBMAPI v1.0
+NOTE: Attestation or token preloading are not implemented for KBMAPI v1.0. The
+`attestation` attribute for PIV Tokens is accepted and properly stored, but not
+enforced depending on `KBMAPI_REQUIRE_ATTESTATION`.
 
 [yubi-attest](https://developers.yubico.com/PIV/Introduction/PIV_attestation.html)
 
@@ -522,7 +524,7 @@ retrieved.
 This can be used too in order to generate new recovery tokens when a request is
 made at a given time after `recovery_token` creation. This time interval will
 be configurable in SAPI through the variable `KBMAPI_RECOVERY_TOKEN_DURATION`.
-By default, this value will be set to 1 day.
+By default, this value is set to 1 day.
 
 When the `POST` request is received for an existing PIV token, KBMAPI will
 verify the antiquity of the newest member of `recovery_tokens` and in case it

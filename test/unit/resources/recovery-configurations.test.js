@@ -320,7 +320,7 @@ test('Initial setup', function tInitialSetup(suite) {
         }, function lsCb(lsErr, lsTk) {
             t.ifErr(lsErr, 'list tokens error');
             t.ok(lsTk, 'list token');
-            t.equal(lsTk.length, 1, 'token is active');
+            t.equal(lsTk.length, 25, 'token is active');
             t.end();
         });
     });

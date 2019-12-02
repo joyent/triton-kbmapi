@@ -22,6 +22,6 @@ echo "Enabling kbmapi service"
 echo "Importing kbmtr SMF manifest"
 /usr/sbin/svccfg import /opt/smartdc/kbmapi/smf/manifests/kbmtr.xml
 
-# echo "Enabling kbmtr service"
-# /usr/sbin/svcadm enable smartdc/application/kbmtr
+echo "Enabling kbmtr service"
+/usr/sbin/svcadm enable smartdc/application/kbmtr
 exit 0

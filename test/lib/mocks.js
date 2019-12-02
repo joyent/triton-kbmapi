@@ -13,6 +13,7 @@ const EventEmitter = require('events').EventEmitter;
 const util = require('util');
 const UUID = require('node-uuid');
 const mod_recovery_token = require('../../lib/models').recovery_token;
+const model = require('../../lib/models').model;
 // --- Globals
 
 var CNAPI_CONNECTED = true;
@@ -96,7 +97,7 @@ FakeCnapiClient.prototype.post = function (uuid, params, cb) {
     }
     mod_recovery_token.update({
         moray: self.moray,
-        key: params.recovery_token.uuid,
+        key: model.uuid(params.token),
         val: val
     }, function upCb(upErr, _upRes) {
         if (upErr) {

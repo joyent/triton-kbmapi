@@ -488,7 +488,7 @@ test('Initial setup', function tInitialSetup(suite) {
         CLIENT.createRecoveryToken({
             guid: TOKENS[0].guid,
             params: {
-                recovery_configuration: RECOVERY_CONFIG.uuid
+                recovery_configuration: ANOTHER_CONFIG.uuid
             },
             privkey: privKeys[0],
             pubkey: TOKENS[0].pubkeys['9e']
@@ -510,7 +510,7 @@ test('Initial setup', function tInitialSetup(suite) {
             path: util.format('/pivtokens/%s/recovery-tokens', TOKENS[0].guid)
         }, {
             zpool_recovery: {
-                staged: RECOVERY_CONFIG.uuid
+                staged: ANOTHER_CONFIG.uuid
             },
             recovery_token: REC_TOKEN.uuid
         }, function putCb(putErr, _req, putRes, _body) {
@@ -540,8 +540,8 @@ test('Initial setup', function tInitialSetup(suite) {
             path: util.format('/pivtokens/%s/recovery-tokens', TOKENS[0].guid)
         }, {
             zpool_recovery: {
-                staged: RECOVERY_CONFIG.uuid,
-                active: RECOVERY_CONFIG.uuid
+                staged: ANOTHER_CONFIG.uuid,
+                active: ANOTHER_CONFIG.uuid
             },
             recovery_token: REC_TOKEN.uuid
         }, function putCb(putErr, _req, putRes, _body) {
