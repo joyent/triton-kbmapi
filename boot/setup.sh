@@ -25,7 +25,7 @@ source /opt/smartdc/boot/lib/util.sh
 sdc_common_setup
 
 # Cookie to identify this as a SmartDC zone and its role
-mkdir -p /var/smartdc/kbmapi
+mkdir -p /var/smartdc/$role
 
 # Add build/node/bin and node_modules/.bin to PATH
 echo "" >>/root/.profile
@@ -49,6 +49,11 @@ mkdir -p /opt/smartdc/$role/etc
 # Create private/public key files
 /opt/local/bin/printf "$(echo ${METADATA} | json SDC_PUBLIC_KEY)" > /opt/smartdc/$role/etc/sdc_key.pub
 /opt/local/bin/printf "$(echo ${METADATA} | json SDC_PRIVATE_KEY)" > /opt/smartdc/$role/etc/sdc_key
+
+# Add cmdline completion for `kbmctl`:
+/opt/smartdc/$role/bin/kbmctl completion >> /etc/bash/bash_completion.d/kbmctl
+echo "" >>/root/.profile
+echo "source '/etc/bash/bash_completion.d/kbmctl'" >>/root/.profile
 
 # All done, run boilerplate end-of-setup
 sdc_setup_complete
