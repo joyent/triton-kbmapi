@@ -59,6 +59,7 @@ const moray = require('moray');
 const restify = require('restify');
 const vasync = require('vasync');
 const VError = require('verror');
+const CNAPI = require('sdc-clients').CNAPI;
 
 const mod_apis_moray = require('./lib/apis/moray');
 const models = require('./lib/models');
@@ -144,7 +145,7 @@ KbmApiTransitioner.prototype.state_init.cnapi = function (S) {
         level: self.config.logLevel || 'info'
     });
 
-    self.cnapi = restify.createJsonClient(conf);
+    self.cnapi = new CNAPI(conf);
 
     S.gotoState('init.moray');
 };
@@ -850,6 +851,13 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                     next();
                     return;
                 }
+
+                // Do not change recovery configuration state if we had errors:
+                if (ctx.currTr.params.errs && ctx.currTr.params.errs.length) {
+                    next();
+                    return;
+                }
+
                 var val = {};
                 var del = false;
 
@@ -913,8 +921,6 @@ if (require.main === module) {
     try {
         const mod_config = require('./lib/config');
         const config = mod_config.load(__dirname + '/config.json');
-        const CNAPI = require('sdc-clients').CNAPI;
-        config.cnapi = new CNAPI(config.cnapi);
         var transitioner = new KbmApiTransitioner({
             config: config,
             log: log
