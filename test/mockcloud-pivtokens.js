@@ -16,6 +16,16 @@
  * Note this assumes every mockcloud server hostname will begin with 'VC'.
  */
 
+
+/* eslint-disable max-len */
+// In order to make all the mockcloud servers to be Zpool Encrypted run,
+// within the mockcloud zone:
+//
+//      declare -a arr=($(ls /data/mockcloud/servers/*/sysinfo.json))
+//      for i in "${arr[@]}"; do json -I -f $i -e 'this["Zpool Encrypted"] = true'; done
+//
+/* eslint-enable max-len */
+
 'use strict';
 
 const crypto = require('crypto');
