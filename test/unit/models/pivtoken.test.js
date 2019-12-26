@@ -109,8 +109,7 @@ test('PIVToken model test', function setup(suite) {
                 moray: moray,
                 log: log_child,
                 params: Object.assign(TOKENS[0], {
-                    recovery_configuration:
-                        'f85b894e-d02c-5b1c-b2ea-0564ef55ee24'
+                    recovery_configuration: RECOVERY_CONFIG
                 })
             }, function createCb(createErr, pivtoken) {
                 t.ifError(createErr, 'Create Error');
@@ -231,8 +230,7 @@ test('PIVToken model test', function setup(suite) {
                 moray: moray,
                 log: log_child,
                 params: Object.assign(TOKENS[0], {
-                    recovery_configuration:
-                        'f85b894e-d02c-5b1c-b2ea-0564ef55ee24'
+                    recovery_configuration: RECOVERY_CONFIG
                 })
             }, function createCb(createErr, _pivtoken) {
                 t.ok(createErr, 'Expected createErr');

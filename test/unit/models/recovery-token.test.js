@@ -217,8 +217,7 @@ test('RecoveryToken model test', function setup(suite) {
                 params: {
                     token: TOKEN,
                     pivtoken: '75CA077A14C5E45037D7A0740D5602A5',
-                    recovery_configuration:
-                        'f85b894e-d02c-5b1c-b2ea-0564ef55ee24'
+                    recovery_configuration: REC_CFG.key()
                 }
             }, function createCb(createErr) {
                 t.ok(createErr, 'Expected createErr');

@@ -52,7 +52,7 @@ var TOKENS = [
     }
 ];
 
-test('RecoveryToken model test', function setup(suite) {
+test('RecoveryTokenHistory model test', function setup(suite) {
     mod_server.setupMoray(log_child, function setupCb(setupErr, moray) {
         if (setupErr) {
             suite.comment('Skipping tests b/c moray setup failed');
@@ -109,8 +109,7 @@ test('RecoveryToken model test', function setup(suite) {
                 moray: moray,
                 log: log_child,
                 params: Object.assign(TOKENS[0], {
-                    recovery_configuration:
-                        'f85b894e-d02c-5b1c-b2ea-0564ef55ee24'
+                    recovery_configuration: RECOVERY_CONFIG
                 })
             }, function createCb(createErr, pivtoken) {
                 t.ifError(createErr, 'Create Error');

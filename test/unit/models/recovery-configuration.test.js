@@ -76,6 +76,8 @@ test('RecoveryConfiguration model test', function setup(suite) {
                 t.ok(recCfg.params.created, 'recovery configuration created');
                 t.ok(recCfg.etag, 'recovery configuration etag');
                 ETAG = recCfg.etag;
+                t.equal(recCfg.params.template.match(/\n/g), null,
+                    'no line breaks in recovery config template');
                 t.end();
             });
         });
