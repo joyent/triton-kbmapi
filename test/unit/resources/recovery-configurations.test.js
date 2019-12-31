@@ -184,9 +184,8 @@ test('Initial setup', function tInitialSetup(suite) {
                 activated: ''
             },
             remove: true
-        }, function upCb(upErr, upRes) {
+        }, function upCb(upErr, _upRes) {
             t.ifError(upErr, 'update error');
-            console.log(util.inspect(upRes, false, 8, true));
             t.end();
         });
     });
@@ -373,6 +372,16 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ifErr(lsErr, 'list tokens error');
             t.ok(lsTk, 'list tokens');
             t.equal(lsTk.length, targets.length, 'tokens are active');
+            t.end();
+        });
+    });
+
+    suite.test('Delete RecoveryConfig before expire', function doDel(t) {
+        CLIENT.deleteRecoveryConfiguration({
+            uuid: RECOVERY_CONFIG.uuid
+        }, function delCb(err, res) {
+            t.ok(err, 'Cannot delete recovery config if not expired');
+            t.equal(res.statusCode, 412, 'delete rec-cfg response code');
             t.end();
         });
     });

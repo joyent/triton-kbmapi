@@ -88,7 +88,7 @@ test('Initial setup', function tInitialSetup(suite) {
 
     // First configuration is always staged and active by default, let's create
     // another one:
-    suite.test('Create Recovery Configuration', function (t) {
+    suite.test('Create Another Recovery Configuration', function (t) {
         h.kbmctl([
             'recovery',
             'create',
@@ -370,7 +370,6 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-
     // Fix this, we need to initiate a transition
     suite.test('Cancel Recovery Configuration', function (t) {
         h.kbmctl([
@@ -388,21 +387,18 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    // FIXME: We need to expire the config before? It should be auto-expired
-    // when we activate the other.
+    // This should fail b/c we canceled the activation of the new
+    // config so, the previous one remains active:
     suite.test('Remove Recovery Configuration', function (t) {
         h.kbmctl([
             'recovery',
             'remove',
-            ANOTHER_REC_CFG.uuid,
+            REC_CFG.uuid,
             '--force'
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'remove recovery')) {
-                t.end();
-                return;
-            }
-            t.equal(stderr, '', 'empty stderr');
-            t.ok(stdout, 'expected cmd stdout');
+            t.ok(err, 'cannot remove active recovery config');
+            t.equal(stdout, '', 'empty stdout');
+            t.ok(stderr, 'expected cmd stderr');
             t.end();
         });
     });

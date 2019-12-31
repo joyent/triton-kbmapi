@@ -192,6 +192,21 @@ test('RecoveryConfiguration model test', function setup(suite) {
             });
         });
 
+        suite.test('Reset recovery cfg', function (t) {
+            models.recovery_configuration.update({
+                moray: moray,
+                key: UUID,
+                val: {
+                    staged: '',
+                    activated: ''
+                },
+                remove: true
+            }, function upCb(upErr, _resetRes) {
+                t.ifError(upErr, 'update error');
+                t.end();
+            });
+        });
+
         suite.test('Avoid Delete wrongEtag', function doDelWrongEtag(t) {
             if (!UUID) {
                 t.comment('Skipping tests due to previous failure');
