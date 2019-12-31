@@ -75,6 +75,7 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ok(stdout, 'expected cmd stdout');
             try {
                 REC_CFG = JSON.parse(stdout.trim());
+                console.log(REC_CFG);
             } catch (e) {
                 console.error(e);
                 t.end();
@@ -102,6 +103,7 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ok(stdout, 'expected cmd stdout');
             try {
                 ANOTHER_REC_CFG = JSON.parse(stdout.trim());
+                console.log(ANOTHER_REC_CFG);
             } catch (e) {
                 console.error(e);
                 t.end();
@@ -161,6 +163,7 @@ test('Initial setup', function tInitialSetup(suite) {
             }
             t.equal(stderr, '', 'empty stderr');
             t.ok(stdout, 'expected cmd stdout');
+            console.log(stdout.trim());
             var cfgs = stdout.trim().split('\n');
             cfgs = cfgs.map(function parse(c) {
                 return JSON.parse(c);
@@ -184,22 +187,6 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ok(err, 'cannot activate before staging err');
             t.ok(stderr, 'got stderr');
             t.equal('', stdout, 'no stdout');
-            t.end();
-        });
-    });
-
-    suite.test('Stage Recovery Configuration', function (t) {
-        h.kbmctl([
-            'recovery',
-            'stage',
-            ANOTHER_REC_CFG.uuid
-        ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'stage recovery')) {
-                t.end();
-                return;
-            }
-            t.equal(stderr, '', 'empty stderr');
-            t.ok(stdout, 'expected cmd stdout');
             t.end();
         });
     });
@@ -228,7 +215,7 @@ test('Initial setup', function tInitialSetup(suite) {
                             '9e': fs.readFileSync(path.resolve(__dirname, '../fixtures/one_token_test_edcsa.pub'), 'ascii')
                             /* eslint-enable max-len */
                         },
-                        recovery_configuration: ANOTHER_REC_CFG.uuid
+                        recovery_configuration: REC_CFG.uuid
                     }
                 }, function createTkCb(err, body, response) {
                     t.ifError(err, 'create token err');
@@ -246,6 +233,22 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+
+    suite.test('Stage Recovery Configuration', function (t) {
+        h.kbmctl([
+            'recovery',
+            'stage',
+            ANOTHER_REC_CFG.uuid
+        ], function (err, stdout, stderr) {
+            if (h.ifErr(t, err, 'stage recovery')) {
+                t.end();
+                return;
+            }
+            t.equal(stderr, '', 'empty stderr');
+            t.ok(stdout, 'expected cmd stdout');
+            t.end();
+        });
+    });
 
     suite.test('List Recovery Before Staging', function (t) {
         h.kbmctl([
@@ -276,7 +279,7 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ifError(lsErr, 'list transition error');
             t.ok(lsItems, 'found pending stage transition');
             t.equal(1, lsItems.length, 'exactly one pending transition');
-            MORAY.batch([
+            var requests = [
                 {
                     bucket: models.recovery_configuration_transition.bucket()
                         .name,
@@ -291,16 +294,27 @@ test('Initial setup', function tInitialSetup(suite) {
                     value: Object.assign(ANOTHER_REC_CFG, {
                         staged: new Date().toISOString()
                     })
-                }, {
+                }
+            ];
+
+            // One recover token will be created by each CN's cn-agent
+            PIVTOKENS_CACHE.forEach(function addTokenRequest(piv) {
+                var tk = crypto.randomBytes(40).toString('hex');
+                var uuid = models.uuid(tk);
+                requests.push({
                     bucket: models.recovery_token.bucket().name,
-                    operation: 'update',
-                    fields: {
+                    value: {
+                        pivtoken: piv.uuid,
+                        recovery_configuration: ANOTHER_REC_CFG.uuid,
+                        token: tk,
+                        uuid: uuid,
                         staged: new Date().toISOString()
                     },
-                    filter: util.format('recovery_configuration=%s',
-                        ANOTHER_REC_CFG.uuid)
-                }
-            ], function batchCb(batchErr, batchMeta) {
+                    key: uuid
+                });
+            });
+
+            MORAY.batch(requests, function batchCb(batchErr, batchMeta) {
                 t.ifError(batchErr, 'batch update error');
                 t.ok(batchMeta, 'Batch update metadata ok');
                 t.end();
@@ -321,13 +335,15 @@ test('Initial setup', function tInitialSetup(suite) {
             }
             t.equal(stderr, '', 'empty stderr');
             t.ok(stdout, 'expected cmd stdout');
+            console.log(stdout.trim());
             var lines = stdout.trim().split('\n');
             t.equal(2, lines.length, 'Expected list output');
             lines.forEach(function (line) {
                 line = line.split(/\s+/);
                 if (line[0] === REC_CFG.uuid) {
                     t.equal(0, Number(line[1]), 'expected staged tokens');
-                    t.equal(0, Number(line[2]), 'expected active tokens');
+                    t.equal(PIVTOKENS_CACHE.length, Number(line[2]),
+                        'expected active tokens');
                 } else {
                     t.equal(PIVTOKENS_CACHE.length, Number(line[1]),
                         'expected staged tokens');
