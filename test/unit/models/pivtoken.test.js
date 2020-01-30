@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -27,7 +27,7 @@ const mod_log = require('../../lib/log');
 const mod_server = require('../../lib/server');
 
 const log_child = mod_log.child({
-    component: 'test-server'
+    component: 'pivtoken.test.js-test-server'
 });
 
 const test = require('tape');
@@ -113,15 +113,22 @@ test('PIVToken model test', function setup(suite) {
                 })
             }, function createCb(createErr, pivtoken) {
                 t.ifError(createErr, 'Create Error');
-                t.ok(pivtoken.params, 'PIVToken params');
-                t.ok(pivtoken.params.guid, 'PIVToken uuid');
-                GUID = pivtoken.params.guid;
-                t.ok(pivtoken.params.recovery_tokens,
-                    'PIVToken recovery tokens');
-                t.ok(pivtoken.params.created, 'PIVToken created');
-                t.ok(pivtoken.etag, 'PIVToken etag');
-                ETAG = pivtoken.etag;
-                RECTOKEN = pivtoken.params.recovery_tokens[0];
+                t.ok(pivtoken, 'PIV Token');
+                if (pivtoken) {
+                    t.ok(pivtoken.params, 'PIVToken params');
+                    t.ok(pivtoken.etag, 'PIVToken etag');
+                    if (pivtoken.etag) {
+                        ETAG = pivtoken.etag;
+                    }
+                    if (pivtoken.params) {
+                        t.ok(pivtoken.params.guid, 'PIVToken uuid');
+                        GUID = pivtoken.params.guid;
+                        t.ok(pivtoken.params.recovery_tokens,
+                            'PIVToken recovery tokens');
+                        t.ok(pivtoken.params.created, 'PIVToken created');
+                        RECTOKEN = pivtoken.params.recovery_tokens[0];
+                    }
+                }
                 t.end();
             });
         });

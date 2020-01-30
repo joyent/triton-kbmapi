@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -19,6 +19,7 @@ const f = require('util').format;
 const test = require('tape');
 
 const h = require('./helpers');
+const common = require('../lib/common');
 
 const subs = [
     ['recovery'],
@@ -43,8 +44,8 @@ test('kbmctl subcommands', function (subcommandsSuite) {
             var out = [];
 
             // loop each individual subcommand to test
-            // triton help <subcmd>
-            // triton <subcmd> -h
+            // kbmctl help <subcmd>
+            // kbmctl <subcmd> -h
             subcmds.forEach(function (subcmd) {
                 var helpArgs = subcmd.split(' ');
                 helpArgs.splice(helpArgs.length - 1, 0, 'help');
@@ -52,7 +53,7 @@ test('kbmctl subcommands', function (subcommandsSuite) {
                 suite.test(f('    kbmctl %s', helpArgs.join(' ')),
                 function (t) {
                     h.kbmctl(helpArgs, function (err, stdout, stderr) {
-                        if (h.ifErr(t, err, 'no error')) {
+                        if (common.ifErr(t, err, 'no error')) {
                             t.end();
                             return;
                         }
@@ -68,7 +69,7 @@ test('kbmctl subcommands', function (subcommandsSuite) {
                 suite.test(f('    kbmctl %s', flagArgs.join(' ')),
                 function (t) {
                     h.kbmctl(flagArgs, function (err, stdout, stderr) {
-                        if (h.ifErr(t, err, 'no error')) {
+                        if (common.ifErr(t, err, 'no error')) {
                             t.end();
                             return;
                         }

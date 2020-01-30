@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -42,13 +42,13 @@ const AUTHZ_FMT =
  *
  */
 
-var SIGNER;
+var AUTH_REQUIRED;
+var OPENSSL;
+var PIVYTOOL;
 var PRIVKEY;
 var PRIVTOKEN;
 var PUBKEY;
-var OPENSSL;
-var PIVYTOOL;
-var AUTH_REQUIRED;
+var SIGNER;
 
 function requestSigner(req) {
     // Let each method decide if we need http auth, either using HMAC or
@@ -129,7 +129,7 @@ function KBMAPI(options) {
  * @param {Object} opts object containing:
  *      - {String} guid: (required) the guid of the token.
  *      - {Object} token: (required) the token to be created.
- *      - {Function} privkey: (optional) private key to sign the request and
+ *      - {String} privkey: (optional) private key to sign the request and
  *        generate the HTTP Signature Auth header which will be used to perform
  *        the HTTP request authentication using the token 9e pubkey.
  * @param {Function} cb: of the form f(err, token, res)
@@ -226,7 +226,6 @@ KBMAPI.prototype.listTokens = function listTokens(opts, cb) {
     assert.object(opts, 'opts');
     assert.func(cb, 'cb');
 
-
     var reqOpts = Object.assign(opts, {
         authRequired: false,
         method: 'GET',
@@ -238,8 +237,6 @@ KBMAPI.prototype.listTokens = function listTokens(opts, cb) {
         cb(err, body, res);
     });
 };
-
-// XXX No update for the moment
 
 /**
  * Gets the public information about a token
@@ -427,7 +424,6 @@ KBMAPI.prototype.deleteRecoveryToken = function deleteRecoveryToken(opts, cb) {
     assert.uuid(opts.uuid, 'opts.uuid');
     assert.func(cb, 'cb');
 
-
     var reqOpts = Object.assign(opts, {
         path: format('/pivtokens/%s/recovery-tokens/%s', opts.guid, opts.uuid),
         method: 'DELETE',
@@ -611,6 +607,8 @@ function updateRecoveryConfiguration(opts, cb) {
     }
 
     if (opts.pivtoken) {
+        assert.strictEqual(opts.action, 'activate',
+            'opts.action must be "activate" when opts.pivtoken is present');
         data.pivtoken = opts.pivtoken;
     }
 

@@ -7,7 +7,7 @@
 #
 
 #
-# Copyright 2019 Joyent, Inc.
+# Copyright 2020 Joyent, Inc.
 #
 
 export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -32,15 +32,11 @@ echo "" >>/root/.profile
 echo "export PATH=\$PATH:/opt/smartdc/$role/build/node/bin:/opt/smartdc/$role/node_modules/.bin:/opt/smartdc/$role/bin" >>/root/.profile
 
 echo "Adding log rotation"
-#sdc_log_rotation_add amon-agent /var/svc/log/*amon-agent*.log 1g
 sdc_log_rotation_add config-agent /var/svc/log/*config-agent*.log 1g
 sdc_log_rotation_add registrar /var/svc/log/*registrar*.log 1g
 sdc_log_rotation_add $role /var/svc/log/*$role*.log 1g
 sdc_log_rotation_add kbmtr /var/svc/log/*kbmtr*.log 1g
 sdc_log_rotation_setup_end
-
-# Add metricsPorts metadata for cmon-agent discovery
-#mdata-put metricPorts 8881
 
 # Grab SDC application ssh keys to be used later by kbmctl
 SAPI_URL=$(/usr/bin/json -f /opt/smartdc/config-agent/etc/config.json sapi.url)

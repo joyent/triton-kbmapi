@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 'use strict';
@@ -22,7 +22,6 @@ var KBMAPI = require('../../lib/app').KBMAPI;
 
 // --- Globals
 
-var MULTI_SUITE_RUN = false;
 var PGHANDLE = null;
 var SERVER = null;
 
@@ -45,10 +44,7 @@ function getPG(log, callback) {
  */
 function closeServer(t) {
     function done() {
-        if (!MULTI_SUITE_RUN) {
-            stopPG();
-        }
-
+        stopPG();
         t.end();
     }
 
@@ -102,7 +98,7 @@ function setupMoray(log, callback) {
             return;
         }
 
-        pg.spawnMoray(function (err, moray) {
+        pg.spawnMoray(function spawnMorayCb(err, moray) {
             if (err) {
                 callback(err);
                 return;
@@ -170,12 +166,6 @@ function createTestServer(opts, callback) {
 }
 
 module.exports = {
-    set MULTI_SUITE_RUN(val) {
-        MULTI_SUITE_RUN = val;
-    },
-    get MULTI_SUITE_RUN() {
-        return MULTI_SUITE_RUN;
-    },
     _create: createTestServer,
     close: closeServer,
     create: createServer,

@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -24,6 +24,7 @@ const UUID = require('node-uuid');
 const vasync = require('vasync');
 
 const h = require('./helpers');
+const common = require('../lib/common');
 const helpers = require('../unit/helpers');
 const mod_server = require('../lib/server');
 
@@ -64,7 +65,7 @@ test('Initial setup', function tInitialSetup(suite) {
             '--json',
             path.resolve(__dirname, '../fixtures/backup')
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'create recovery config')) {
+            if (common.ifErr(t, err, 'create recovery config')) {
                 t.end();
                 return;
             }
@@ -89,7 +90,7 @@ test('Initial setup', function tInitialSetup(suite) {
             '--json',
             path.resolve(__dirname, '../fixtures/pivtoken.json')
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'create pivtoken')) {
+            if (common.ifErr(t, err, 'create pivtoken')) {
                 t.end();
                 return;
             }
@@ -155,7 +156,7 @@ test('Initial setup', function tInitialSetup(suite) {
             'pivtoken',
             'list'
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'list pivtoken')) {
+            if (common.ifErr(t, err, 'list pivtoken')) {
                 t.end();
                 return;
             }
@@ -185,7 +186,7 @@ test('Initial setup', function tInitialSetup(suite) {
             PIVTK.guid,
             '--force'
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'remove pivtoken')) {
+            if (common.ifErr(t, err, 'remove pivtoken')) {
                 t.end();
                 return;
             }

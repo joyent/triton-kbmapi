@@ -6,7 +6,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -77,40 +77,40 @@ cnapi.listServers(function lsCb(lsErr, lsServers) {
     });
 
 
-        vasync.forEachParallel({
-            func: function createPIVToken(arg, next) {
-                const GUID = crypto.randomBytes(16).toString('hex')
-                            .toUpperCase();
-                KBMAPI.createToken({
+    vasync.forEachParallel({
+        func: function createPIVToken(arg, next) {
+            const GUID = crypto.randomBytes(16).toString('hex')
+                        .toUpperCase();
+            KBMAPI.createToken({
+                guid: GUID,
+                privkey: PRIVKEY,
+                pubkey: PUBKEY,
+                token: {
                     guid: GUID,
-                    privkey: PRIVKEY,
-                    pubkey: PUBKEY,
-                    token: {
-                        guid: GUID,
-                        pin: String(Math.floor(Math.random() * 1000000)),
-                        serial: crypto.randomBytes(12).toString('hex'),
-                        model: 'ACME insta-token model 1',
-                        cn_uuid: arg.uuid,
-                        pubkeys: {
-                            /* eslint-disable max-len */
-                            '9a': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBC7NhJvp9c5XMOkPLfDvsHZytnY4cWduFRF4KlQIr7LNQnbw50NNlbyhXHzD85KjcztyMoqn9w4XuHdJh4O1lH4=',
-                            '9d': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD+uKKyn5tBNziW21yPt/0FE2LD4l1cWgzONYjn3n8BzSNo/aTzJccki7Q/Lyk7dM8yZLAc/5V/U/QHbLTpexBg=',
-                            '9e': fs.readFileSync(path.resolve(__dirname, './fixtures/one_token_test_edcsa.pub'), 'ascii')
-                            /* eslint-enable max-len */
-                        }
+                    pin: String(Math.floor(Math.random() * 1000000)),
+                    serial: crypto.randomBytes(12).toString('hex'),
+                    model: 'ACME insta-token model 1',
+                    cn_uuid: arg.uuid,
+                    pubkeys: {
+                        /* eslint-disable max-len */
+                        '9a': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBC7NhJvp9c5XMOkPLfDvsHZytnY4cWduFRF4KlQIr7LNQnbw50NNlbyhXHzD85KjcztyMoqn9w4XuHdJh4O1lH4=',
+                        '9d': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD+uKKyn5tBNziW21yPt/0FE2LD4l1cWgzONYjn3n8BzSNo/aTzJccki7Q/Lyk7dM8yZLAc/5V/U/QHbLTpexBg=',
+                        '9e': fs.readFileSync(path.resolve(__dirname, './fixtures/one_token_test_edcsa.pub'), 'ascii')
+                        /* eslint-enable max-len */
                     }
-                }, function createTkCb(err, body, _response) {
-                    console.log(util.inspect(body, false, 8, true));
-                    next(err);
-                });
-            },
-            inputs: servers
-        }, function paraCb(paraErr, _paraRes) {
-            if (paraErr) {
-                console.error('Error creating pivtokens: ' + paraErr);
-                process.exit(2);
-            }
-        });
+                }
+            }, function createTkCb(err, body, _response) {
+                console.log(util.inspect(body, false, 8, true));
+                next(err);
+            });
+        },
+        inputs: servers
+    }, function paraCb(paraErr, _paraRes) {
+        if (paraErr) {
+            console.error('Error creating pivtokens: ' + paraErr);
+            process.exit(2);
+        }
+    });
 });
 
 

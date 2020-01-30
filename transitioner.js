@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 'use strict';
 
@@ -25,7 +25,7 @@
  *
  *   "RUN" a transition means:
  *   - "Lock it" to our process (likely using zone uuid)
- *   - Check the type of transition. We're interested only on "stage" and
+ *   - Check the type of transition. We're interested only in "stage" and
  *     "activate" for a first pass.
  *   - In case we have an "stage" transition, grab the recovery
  *     configuration template we want to spread across all the transition
@@ -34,12 +34,12 @@
  *     concurrency, awaiting for completion of the first batch of CNs before
  *     re-checking the recovery configuration transition for cancelation
  *     attempts. Save the tasksids into the transition backend. Save the
- *     uuids of the cns where the taksks are being executed as WIP.
+ *     uuids of the cns where the tasks are being executed as WIP.
  *   - Poll for tasks completion. Once a task is complete add the cn UUID
  *     to transition's completed member.
  *   - Check if the transition has been canceled and in such case finish it
  *     without moving into next batch.
- *   - Do the same until we have completed the whole set targets in batches of
+ *   - Do the same until we have completed the whole set in batches of
  *     the given concurrency.
  *   - If the action is "activate" we also need to "expire" the previously
  *     active recovery configuration on completion, (and all the associated
@@ -71,6 +71,7 @@ var log = bunyan.createLogger({
 });
 
 const USAGE_PERIOD = 8 * 60 * 60 * 1000; // 8 hours
+const CNAPI_WAIT_TASK_TIMEOUT = 60 * 5000;
 
 function periodicUsageLog(alog) {
     alog.info({ memory: process.memoryUsage() },
@@ -83,9 +84,9 @@ function KbmApiTransitioner(opts) {
     this.cnapi = opts.cnapi || null;
     this.moray = opts.moray || null;
 
-    if (opts.config && opts.config.bucketPrefix) {
+    if (opts.config && opts.config.testBucketPrefix) {
         mod_apis_moray.setTestPrefix(
-            opts.config.bucketPrefix.replace(/-/g, '_'));
+            opts.config.testBucketPrefix.replace(/-/g, '_'));
     }
 
     mooremachine.FSM.call(this, 'waiting');
@@ -250,23 +251,21 @@ KbmApiTransitioner.prototype._cleanup = function (callback) {
         self.cnapi.close();
     }
 
+    /* eslint-disable callback-return */
     if (callback) {
         callback();
-        return;
     }
+    /* eslint-enable callback-return */
 };
 
 KbmApiTransitioner.prototype.prune = function prune() {
     var self = this;
     function pruneHist() {
-        if (self.pruneTimeout) {
-            clearTimeout(self.pruneTimeout);
-            self.pruneTimeout = null;
-        }
+        self.pruneTimeout = null;
 
-        // Expected to be in seconds
-        const duration = self.config.historyDuration * 1000;
-        const dateLimit = new Date(Date.now() - duration).toISOString();
+        // config.historyDuration is defined in seconds
+        const durationMs = self.config.historyDuration * 1000;
+        const dateLimit = new Date(Date.now() - durationMs).toISOString();
 
         const filter = util.format('(active_range:overlaps:=[,%s])', dateLimit);
         const bucket = models.pivtoken_history.bucket().name;
@@ -284,7 +283,7 @@ KbmApiTransitioner.prototype.prune = function prune() {
             self.moray.deleteMany(b, f, function deCb(dErr) {
                 if (dErr) {
                     self.log.error({
-                        err: err,
+                        err: dErr,
                         filter: f
                     }, 'Error recovery token expired records');
                 }
@@ -294,7 +293,8 @@ KbmApiTransitioner.prototype.prune = function prune() {
                     token_filter: f
                 }, 'Prune run.');
 
-                setTimeout(pruneHist, self.config.pollInterval * 1000);
+                self.pruneTimeout = setTimeout(pruneHist,
+                    self.config.pollInterval * 1000);
             });
         });
     }
@@ -312,23 +312,27 @@ KbmApiTransitioner.prototype.run = function run() {
         self.runTransition(function runTrCb(runTrErr, moreTrs) {
             if (runTrErr) {
                 self.log.error({err: runTrErr}, 'Run transition error');
-                models.recovery_configuration_transition.update({
-                    moray: self.moray,
-                    log: self.log,
-                    key: self.currTr.key(),
-                    val: {
-                        aborted: true,
-                        finished: new Date().toISOString()
-                    }
-                }, function upCb(upErr) {
-                    self.currTr = null;
-                    if (upErr) {
-                        self.log.error({err: upErr}, 'Abort transition error');
-                    }
-                    self.runTimeout =
-                        setTimeout(runTransition,
-                            self.config.pollInterval * 1000);
-                });
+                if (self.currTr) {
+                    models.recovery_configuration_transition.update({
+                        moray: self.moray,
+                        log: self.log,
+                        key: self.currTr.key(),
+                        val: {
+                            aborted: true,
+                            finished: new Date().toISOString()
+                        }
+                    }, function upCb(upErr) {
+                        self.currTr = null;
+                        if (upErr) {
+                            self.log.error({err: upErr},
+                                'Abort transition error');
+                        }
+                        self.runTimeout =
+                            setTimeout(runTransition,
+                                self.config.pollInterval * 1000);
+                    });
+                }
+                return;
             }
             if (moreTrs) {
                 runTransition();
@@ -463,7 +467,7 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                 });
             },
             // Note that if the action is "stage" it would be expected
-            // to do not have any RecoveryTokens associated with the
+            // to not have any RecoveryTokens associated with the
             // current recovery configuration. Otherwise, we should have
             // such RecoveryTokens and would need to check at their props.
             function getPendingTargetsRecoveryTokens(ctx, next) {
@@ -521,6 +525,10 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                 const missingGuids = pivtokensGuids.filter(function (id) {
                     return existingGuids.indexOf(id) === -1;
                 });
+
+                if (!ctx.targetRecoveryTokens) {
+                    ctx.targetRecoveryTokens = [];
+                }
 
                 vasync.forEachParallel({
                     inputs: missingGuids,
@@ -627,7 +635,7 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                 var params = ctx.currTr.params;
                 // If we already have WIP CNs we need to check for completion,
                 // otherwise we need to begin transitioning a new batch of CNs.
-                // Also, when we do we need to lock the transition so no other
+                // Also, when we need to lock the transition so no other
                 // locker attempts to run it.
                 var val = {
                     locked_by: self.config.instanceUuid
@@ -745,18 +753,29 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                                 },
                                 function waitForTask(arg, nextStep) {
                                     self.cnapi.waitTask(arg.taskid, {
-                                    // Should make this a constant
-                                        timeout: 60 * 5000
-                                    }, nextStep);
+                                        timeout: CNAPI_WAIT_TASK_TIMEOUT
+                                    }, function checkTask(taskErr, task) {
+                                        if (taskErr) {
+                                            nextStep(taskErr);
+                                            return;
+                                        }
+                                        if (task.status !== 'complete') {
+                                            nextStep(new Error(
+                                                'Unexpected task status: ' +
+                                                task.status));
+                                            return;
+                                        }
+                                        nextStep();
+                                    });
                                 }
-                            ]}, function taskCb(taskErr, _taskRes) {
+                            ]}, function taskCb(taskErr) {
                                 if (taskErr) {
                                     errs.push(taskErr);
                                 }
                                 nextTask();
                             });
                         }
-                    }, function batchCb(batchErr, _batchRes) {
+                    }, function batchCb(batchErr) {
                         if (batchErr) {
                             self.log.error({
                                 err: batchErr
@@ -764,7 +783,9 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                         }
                         var val = {
                             taskids: (ctx.currTr.params.taskids || [])
-                                .concat(tasks)
+                                .concat(tasks),
+                            completed: (ctx.currTr.params.completed || [])
+                            .concat(items)
                         };
 
                         if (errs) {
@@ -772,11 +793,10 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                                 ctx.currTr.params.errs || []);
                         }
 
-                        val.completed = (ctx.currTr.params.completed || [])
-                            .concat(items);
                         self.log.debug({
                             val: val
                         }, 'doBatch batchCb');
+
                         models.recovery_configuration_transition.update({
                             moray: self.moray,
                             key: ctx.currTr.key(),
@@ -794,7 +814,7 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                             }, 'doBatch');
 
                             if (upTr.params.aborted) {
-                                next(VError({
+                                nextBatch(VError({
                                     name: 'AlreadyDoneError',
                                     info: {
                                         'errno': 'ERRDONE'
@@ -809,20 +829,14 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                     });
                 }
 
+                assert.ok(ctx.currTr.params.concurrency, 'concurrency');
                 const concurrency = ctx.currTr.params.concurrency;
-                var pending = ctx.pendingTargets;
-                var numBatches = Math.floor(pending.length /
-                    concurrency);
-                if ((pending.length % concurrency) !== 0) {
-                    numBatches += 1;
-                }
                 var batches = [];
+                var i;
+                var pending = ctx.pendingTargets;
 
-                var i, items;
-                for (i = 0; i < numBatches; i += 1) {
-                    items = pending.slice(i * concurrency,
-                        (i * concurrency) + concurrency);
-                    batches.push(items);
+                for (i = 0; i < pending.length; i += concurrency) {
+                    batches.push(pending.slice(i, i + concurrency));
                 }
 
                 vasync.forEachPipeline({inputs: batches, func: doBatch}, next);
@@ -929,10 +943,6 @@ if (require.main === module) {
         transitioner.on('initialized', function started() {
             transitioner.prune();
             transitioner.run();
-
-                // Run transitions.
-                // Then stop the transitioner until something else makes it
-                // run again.
         });
 
         process.on('SIGINT', function () {

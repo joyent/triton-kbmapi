@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -16,7 +16,6 @@
 
 var KBMAPI = require('../../client/');
 var assert = require('assert-plus');
-var clone = require('clone');
 var fmt = require('util').format;
 var jsprim = require('jsprim');
 var mod_uuid = require('node-uuid');
@@ -40,6 +39,8 @@ function requestHeaders(opts) {
  * Adds the given object to:
  * - CREATED[type]
  * - opts.state (if opts and opts.state are present)
+ * - opts.state[opts.stateProp]
+ *   (if opts, opts.state and opts.stateProp are present)
  */
 function addToState(opts, type, obj) {
     if (!CREATED.hasOwnProperty(type)) {
@@ -56,7 +57,7 @@ function addToState(opts, type, obj) {
         opts.state[type] = [];
     }
 
-    var newObj = clone(obj);
+    var newObj = jsprim.deepCopy(obj);
     if (opts.hasOwnProperty('stateProp')) {
         if (!opts.state.hasOwnProperty(opts.stateProp)) {
             opts.state[opts.stateProp] = [];
@@ -126,8 +127,8 @@ function afterAPIcall(t, opts, callback, err, obj, res) {
         var expected = opts.exp;
 
         if (opts.hasOwnProperty('ignore')) {
-            var objClone = clone(obj);
-            var expClone = clone(opts.exp);
+            var objClone = jsprim.deepCopy(obj);
+            var expClone = jsprim.deepCopy(opts.exp);
 
             opts.ignore.forEach(function (ign) {
                 delete objClone[ign];
@@ -231,9 +232,9 @@ function afterAPIlist(t, opts, callback, err, obj, res) {
     t.ok(true, obj.length + ' results returned' + desc);
 
     if (opts.present) {
-        var left = clone(opts.present);
+        var left = jsprim.deepCopy(opts.present);
         var ids = left.map(function (o) { return o[id]; });
-        var present = clone(ids);
+        var present = jsprim.deepCopy(ids);
         var notInPresent = [];
 
         jsprim.forEachKey(obj, function (_key, resObj) {
@@ -250,7 +251,7 @@ function afterAPIlist(t, opts, callback, err, obj, res) {
                     type: opts.type,
                     reqType: opts.reqType,
                     exp: expObj,
-                    ignore: clone(opts.ignore)
+                    ignore: jsprim.deepCopy(opts.ignore)
                 };
 
                 if (opts.ts && opts.ts[idx]) {
@@ -261,8 +262,8 @@ function afterAPIlist(t, opts, callback, err, obj, res) {
                     // ignore doesn't really make sense in the context of a
                     // partial response
                     if (tsOpts.ignore) {
-                        var resClone = clone(resObj);
-                        var expClone = clone(expObj);
+                        var resClone = jsprim.deepCopy(resObj);
+                        var expClone = jsprim.deepCopy(expObj);
 
                         tsOpts.ignore.forEach(function (ign) {
                             delete resClone[ign];
@@ -427,7 +428,6 @@ function createClient(url, t) {
 }
 
 module.exports = {
-    addToState: addToState,
     afterAPIcall: afterAPIcall,
     afterAPIdelete: afterAPIdelete,
     afterAPIlist: afterAPIlist,

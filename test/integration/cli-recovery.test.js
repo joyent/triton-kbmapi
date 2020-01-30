@@ -6,7 +6,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -25,6 +25,7 @@ const UUID = require('node-uuid');
 const vasync = require('vasync');
 
 const h = require('./helpers');
+const common = require('../lib/common');
 const helpers = require('../unit/helpers');
 const mod_server = require('../lib/server');
 
@@ -67,7 +68,7 @@ test('Initial setup', function tInitialSetup(suite) {
             '--json',
             path.resolve(__dirname, '../fixtures/backup')
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'create recovery config')) {
+            if (common.ifErr(t, err, 'create recovery config')) {
                 t.end();
                 return;
             }
@@ -75,7 +76,6 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ok(stdout, 'expected cmd stdout');
             try {
                 REC_CFG = JSON.parse(stdout.trim());
-                console.log(REC_CFG);
             } catch (e) {
                 console.error(e);
                 t.end();
@@ -95,7 +95,7 @@ test('Initial setup', function tInitialSetup(suite) {
             '--json',
             path.resolve(__dirname, '../fixtures/another')
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'create recovery config')) {
+            if (common.ifErr(t, err, 'create recovery config')) {
                 t.end();
                 return;
             }
@@ -103,7 +103,6 @@ test('Initial setup', function tInitialSetup(suite) {
             t.ok(stdout, 'expected cmd stdout');
             try {
                 ANOTHER_REC_CFG = JSON.parse(stdout.trim());
-                console.log(ANOTHER_REC_CFG);
             } catch (e) {
                 console.error(e);
                 t.end();
@@ -120,13 +119,12 @@ test('Initial setup', function tInitialSetup(suite) {
             'get',
             REC_CFG.uuid
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'get recovery')) {
+            if (common.ifErr(t, err, 'get recovery')) {
                 t.end();
                 return;
             }
             t.equal(stderr, '', 'empty stderr');
             t.ok(stdout, 'expected cmd stdout');
-            console.log(stdout);
             t.end();
         });
     });
@@ -139,7 +137,7 @@ test('Initial setup', function tInitialSetup(suite) {
             '--json',
             ANOTHER_REC_CFG.uuid
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'get recovery')) {
+            if (common.ifErr(t, err, 'get recovery')) {
                 t.end();
                 return;
             }
@@ -157,13 +155,12 @@ test('Initial setup', function tInitialSetup(suite) {
             'list',
             '--json'
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'list recovery')) {
+            if (common.ifErr(t, err, 'list recovery')) {
                 t.end();
                 return;
             }
             t.equal(stderr, '', 'empty stderr');
             t.ok(stdout, 'expected cmd stdout');
-            console.log(stdout.trim());
             var cfgs = stdout.trim().split('\n');
             cfgs = cfgs.map(function parse(c) {
                 return JSON.parse(c);
@@ -221,8 +218,10 @@ test('Initial setup', function tInitialSetup(suite) {
                     t.ifError(err, 'create token err');
                     t.equal(response.statusCode, 201,
                         'create token response code');
-                    t.ok(body, 'create token body');
-                    PIVTOKENS_CACHE.push(body);
+                    if (body) {
+                        t.ok(body, 'create token body');
+                        PIVTOKENS_CACHE.push(body);
+                    }
                     next(err);
                 });
             },
@@ -240,7 +239,7 @@ test('Initial setup', function tInitialSetup(suite) {
             'stage',
             ANOTHER_REC_CFG.uuid
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'stage recovery')) {
+            if (common.ifErr(t, err, 'stage recovery')) {
                 t.end();
                 return;
             }
@@ -255,13 +254,12 @@ test('Initial setup', function tInitialSetup(suite) {
             'recovery',
             'list'
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'list recovery')) {
+            if (common.ifErr(t, err, 'list recovery')) {
                 t.end();
                 return;
             }
             t.equal(stderr, '', 'empty stderr');
             t.ok(stdout, 'expected cmd stdout');
-            console.log(stdout.trim());
             t.end();
         });
     });
@@ -329,13 +327,12 @@ test('Initial setup', function tInitialSetup(suite) {
             '-l',
             '-H'
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'list recovery')) {
+            if (common.ifErr(t, err, 'list recovery')) {
                 t.end();
                 return;
             }
             t.equal(stderr, '', 'empty stderr');
             t.ok(stdout, 'expected cmd stdout');
-            console.log(stdout.trim());
             var lines = stdout.trim().split('\n');
             t.equal(2, lines.length, 'Expected list output');
             lines.forEach(function (line) {
@@ -360,7 +357,7 @@ test('Initial setup', function tInitialSetup(suite) {
             'activate',
             ANOTHER_REC_CFG.uuid
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'stage recovery')) {
+            if (common.ifErr(t, err, 'stage recovery')) {
                 t.end();
                 return;
             }
@@ -370,14 +367,13 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    // Fix this, we need to initiate a transition
     suite.test('Cancel Recovery Configuration', function (t) {
         h.kbmctl([
             'recovery',
             'cancel',
             ANOTHER_REC_CFG.uuid
         ], function (err, stdout, stderr) {
-            if (h.ifErr(t, err, 'stage recovery')) {
+            if (common.ifErr(t, err, 'stage recovery')) {
                 t.end();
                 return;
             }

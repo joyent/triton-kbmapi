@@ -6,7 +6,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -225,6 +225,7 @@ test('FSM Transition test', function setup(suite) {
                 t.end();
             });
         });
+
         suite.test('Stage with UUID', function (t) {
             fsm_transition({
                 moray: moray,
@@ -244,6 +245,10 @@ test('FSM Transition test', function setup(suite) {
         });
 
         suite.test('Cancel stage transition', function (t) {
+            if (!TRANSITION) {
+                t.end();
+                return;
+            }
             fsm_transition({
                 moray: moray,
                 log: log_child,
@@ -253,9 +258,11 @@ test('FSM Transition test', function setup(suite) {
                 }
             }, function trCb(trErr, trRes) {
                 t.ifError(trErr, 'Cancel stage transition error');
-                t.ok(trRes, 'Cancel staage transition');
-                t.equal(trRes.transition.key(), TRANSITION.key(),
-                    'Cancel transition');
+                t.ok(trRes, 'Cancel stage transition');
+                if (trRes) {
+                    t.equal(trRes.transition.key(), TRANSITION.key(),
+                        'Cancel transition');
+                }
                 t.end();
             });
         });
@@ -327,14 +334,17 @@ test('FSM Transition test', function setup(suite) {
             }], function batchCb(batchErr, batchMeta) {
                 t.ifError(batchErr, 'Stage recTokens err');
                 t.ok(batchMeta, 'Stage recTokens metadata');
-                REC_CFG = new mod_recovery_configuration
-                    .RecoveryConfiguration(Object.assign(newCfg, {
-                        etag: batchMeta.etags[0].etag
-                    }));
-                TRANSITION = new mod_recovery_configuration_transition
-                    .RecoveryConfigurationTransition(Object.assign(newTr, {
-                        etag: batchMeta.etags[2].etag
-                    }));
+                if (batchMeta && Array.isArray(batchMeta.etags) &&
+                    batchMeta.etags.length >= 3) {
+                    REC_CFG = new mod_recovery_configuration
+                        .RecoveryConfiguration(Object.assign(newCfg, {
+                            etag: batchMeta.etags[0].etag
+                        }));
+                    TRANSITION = new mod_recovery_configuration_transition
+                        .RecoveryConfigurationTransition(Object.assign(newTr, {
+                            etag: batchMeta.etags[2].etag
+                        }));
+                }
                 t.end();
             });
         });
@@ -431,9 +441,9 @@ test('FSM Transition test', function setup(suite) {
 
         // This should happen once the transition has been created and the
         // runner picks it up to execute. Obviously, we are just interested
-        // into the recovery tokens update which will allow us to move to
+        // in the recovery tokens update which will allow us to move to
         // the next FSM status w/o errors (not anything happening for real
-        // into the CNs)
+        // in the CNs)
         suite.test('Activate recovery tokens', function (t) {
             var newCfg = REC_CFG.raw();
             var newTr = TRANSITION.raw();
@@ -465,14 +475,17 @@ test('FSM Transition test', function setup(suite) {
             }], function batchCb(batchErr, batchMeta) {
                 t.ifError(batchErr, 'Activate recTokens err');
                 t.ok(batchMeta, 'Activate recTokens metadata');
-                REC_CFG = new mod_recovery_configuration
-                    .RecoveryConfiguration(Object.assign(newCfg, {
-                        etag: batchMeta.etags[0].etag
-                    }));
-                TRANSITION = new mod_recovery_configuration_transition
-                    .RecoveryConfigurationTransition(Object.assign(newTr, {
-                        etag: batchMeta.etags[2].etag
-                    }));
+                if (batchMeta && Array.isArray(batchMeta.etags) &&
+                    batchMeta.etags.length >= 3) {
+                    REC_CFG = new mod_recovery_configuration
+                        .RecoveryConfiguration(Object.assign(newCfg, {
+                            etag: batchMeta.etags[0].etag
+                        }));
+                    TRANSITION = new mod_recovery_configuration_transition
+                        .RecoveryConfigurationTransition(Object.assign(newTr, {
+                            etag: batchMeta.etags[2].etag
+                        }));
+                }
                 t.end();
             });
         });
@@ -520,11 +533,13 @@ test('FSM Transition test', function setup(suite) {
             }, function lsCb(lsErr, lsRes) {
                 t.ifError(lsErr, 'verify reactivation error');
                 t.ok(lsRes, 'verify reactivation recovery tokens');
-                t.equal(targets.length, lsRes.length,
-                    'verify reactivation tokens count');
-                t.ok(!lsRes[0].staged, 'token not staged');
-                t.ok(!lsRes[0].activated, 'token not active');
-                t.ok(!lsRes[0].expired, 'token not expired');
+                if (lsRes && Array.isArray(lsRes) && lsRes.length) {
+                    t.equal(targets.length, lsRes.length,
+                        'verify reactivation tokens count');
+                    t.ok(!lsRes[0].staged, 'token not staged');
+                    t.ok(!lsRes[0].activated, 'token not active');
+                    t.ok(!lsRes[0].expired, 'token not expired');
+                }
                 t.end();
             });
         });

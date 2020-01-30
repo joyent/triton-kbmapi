@@ -5,10 +5,10 @@
 -->
 
 <!--
-    Copyright 2019 Joyent, Inc.
+    Copyright 2020 Joyent, Inc.
 -->
 
-# triton-kbmapi: An Earth-shattering key backup and management service
+# triton-kbmapi: Key backup and management service
 
 This repository is part of the Joyent Triton project. See the [contribution
 guidelines](https://github.com/joyent/triton/blob/master/CONTRIBUTING.md) --
@@ -17,8 +17,11 @@ guidelines](https://github.com/joyent/triton/blob/master/CONTRIBUTING.md) --
 
 ## Development
 
-This is an incomplete work in progress of a proof of concept.  You have
-been warned.
+This is a Work In Progress. Some of the RFD specifications may be not
+yet implemented. Please check docs directory for more details regarding
+current and future development plans.
+
+To build the project:
 
     make all
 
@@ -34,6 +37,9 @@ usb.generic.allowLastHID = "TRUE"
 
 These files are usually `netboot.vmx` for Compute Node COAL images and
 `USB-headnode.vmx` of the SDC Headnode.
+
+The file `coal/coal-computenode.vmwarevm.14.tbz2` added to sdc-headnode.git
+repository already contains all the aforementioned modifications.
 
 Once these lines have been added there will be two available options for a
 given pivy-tool:
@@ -87,22 +93,10 @@ then, getting code coverage results is as simple as:
 
 ## Installation
 
-To warn again, this is a work in progress prototype.  You should **not** attempt
-to install this on any Triton installation that you are not prepared to wipe
-(including all instances) and reinstall from scratch.  Nor should you use it
-to protect any data you care about at this time (it's still in development).
-You have been warned twice now!
-
 The easiest way is to upgrade sdcadm to an experimental image containing the
 KBMAPI install code:
 
-    sdcadm self-update -C experimental 4f792e1c-cd8f-11e8-b270-abdc411647b9
-
-NOTE: The sdcadm image UUID may change as updates are made to the KBMAPI update
-code, or as the KBMAPI branch is rebased from master.  I'll try to keep this
-updated with the last built image during the initial development.  Once we
-release this for real, it is expected the normal Triton update procedures
-should be all that's necessary.
+    sdcadm self-update
 
 Then run the KBMAPI post-setup:
 
@@ -110,6 +104,9 @@ Then run the KBMAPI post-setup:
 
 That should grab that most recently built KBMAPI image.  Once that completes,
 you should have a kbmapi0 zone on your HN.
+
+Note there will be no need to use `experimental` channel once the first KBMAPI
+release reaches master repository branch.
 
 ## Updates
 

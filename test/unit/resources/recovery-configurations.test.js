@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -345,7 +345,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Watch recovery configuration', function doWatch(t) {
+    suite.skip('Watch recovery configuration', function doWatch(t) {
         t.comment('Pending');
         // body...
         t.end();

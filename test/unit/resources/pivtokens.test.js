@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -77,11 +77,11 @@ var OTHER_TOKEN = {
     guid: '1FFCFCBF0BE44E30975A550069B9B741',
     pin: '424242',
     pubkeys: {
-            /* eslint-disable max-len */
-            '9a': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEv/A+0Gc6X5fADdewP1+VJvqgq+ANVCA9rLHxvVkbqbDeFoUBFIPBqKBmpw6kWMb4J6B+4oQTp936+CgdJySz8=',
-            '9d': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFD+ANQt5yC9EvPa5V7OfFpscRDbN9e+ghc0g+u6wVA4CQw1+/s4NRUybf/HIOveYHfpiP9ai5C6HAZYQE28rNY=',
-            '9e': fs.readFileSync(path.resolve(__dirname, '../../fixtures/another_token_recovery_edcsa.pub'), 'ascii')
-            /* eslint-enable max-len */
+        /* eslint-disable max-len */
+        '9a': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEv/A+0Gc6X5fADdewP1+VJvqgq+ANVCA9rLHxvVkbqbDeFoUBFIPBqKBmpw6kWMb4J6B+4oQTp936+CgdJySz8=',
+        '9d': 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFD+ANQt5yC9EvPa5V7OfFpscRDbN9e+ghc0g+u6wVA4CQw1+/s4NRUybf/HIOveYHfpiP9ai5C6HAZYQE28rNY=',
+        '9e': fs.readFileSync(path.resolve(__dirname, '../../fixtures/another_token_recovery_edcsa.pub'), 'ascii')
+        /* eslint-enable max-len */
     }
 };
 
@@ -112,9 +112,14 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    function PivTokenTest(name, testFunc) {
+        suite.test(name, function (t) {
+            CLIENT.clean();
+            testFunc(t);
+        });
+    }
 
-    suite.test('Create RecoveryConfiguration', function doCreate(t) {
-        CLIENT.clean();
+    PivTokenTest('Create RecoveryConfiguration', function doCreate(t) {
         CLIENT.createRecoveryConfiguration({
             template: eboxTpl
         }, function createCb(err, recoveryConfig, res) {
@@ -129,8 +134,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
 
-    suite.test('Create Another RecoveryConfiguration', function doCreate(t) {
-        CLIENT.clean();
+    PivTokenTest('Create Another RecoveryConfiguration', function doCreate(t) {
         CLIENT.createRecoveryConfiguration({
             template: anotherTpl
         }, function createCb(err, recoveryConfig, res) {
@@ -144,8 +148,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Create pivtoken w/o cn_uuid', function tCreateWOCNUuid(t) {
-        CLIENT.clean();
+    PivTokenTest('Create pivtoken w/o cn_uuid', function tCreateWOCNUuid(t) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         delete tk.cn_uuid;
         mod_token.create(t, {
@@ -164,8 +167,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Create pivtoken w/o pin', function tCreateWOPin(t) {
-        CLIENT.clean();
+    PivTokenTest('Create pivtoken w/o pin', function tCreateWOPin(t) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         delete tk.pin;
         mod_token.create(t, {
@@ -184,8 +186,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Create pivtoken invalid pubkeys', function tInvalidKeys(t) {
-        CLIENT.clean();
+    PivTokenTest('Create pivtoken invalid pubkeys', function tInvalidKeys(t) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         tk.pubkeys['9a'] = null;
         mod_token.create(t, {
@@ -204,8 +205,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Create pivtoken invalid recovery cfg', function tWrongCfg(t) {
-        CLIENT.clean();
+    PivTokenTest('Create pivtoken invalid recovery cfg', function tWrongCfg(t) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         tk.recovery_configuration = '00000000-0000-0000-0000-000000000001';
         mod_token.create(t, {
@@ -225,8 +225,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Create pivtokens', function tCreateTokens(t) {
-        CLIENT.clean();
+    PivTokenTest('Create pivtokens', function tCreateTokens(t) {
         function createAToken(aToken, aKey) {
             t.test('Create token GUID ' + aToken.guid, function doCreate(t3) {
                 mod_token.create(t3, {
@@ -245,8 +244,8 @@ test('Initial setup', function tInitialSetup(suite) {
         t.end();
     });
 
-    suite.test('Create pivtoken with invalid privkey', function privKeyErr(t) {
-        CLIENT.clean();
+    PivTokenTest('Create pivtoken with invalid privkey',
+        function privKeyErr(t) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         mod_token.create(t, {
             params: tk,
@@ -259,8 +258,8 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Re-create pivtoken with valid privkey', function privKeyOk(t) {
-        CLIENT.clean();
+    PivTokenTest('Re-create pivtoken with valid privkey',
+        function privKeyOk(t) {
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         mod_token.create(t, {
             params: Object.assign({}, tk, {
@@ -271,9 +270,8 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Re-create pivtoken with different recovery config',
+    PivTokenTest('Re-create pivtoken with different recovery config',
         function differentCfgCb(t) {
-        CLIENT.clean();
         var tk = mod_jsprim.deepCopy(TOKENS[0]);
         delete tk.recovery_tokens[0].template;
         mod_token.create(t, {
@@ -292,8 +290,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Get pivtoken', function tGetToken(t) {
-        CLIENT.clean();
+    PivTokenTest('Get pivtoken', function tGetToken(t) {
         var tok = TOKENS[0];
 
         mod_token.get(t, {
@@ -312,8 +309,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
 
-    suite.test('Get pivtoken with pin requires auth', function tGetTkPin(t) {
-        CLIENT.clean();
+    PivTokenTest('Get pivtoken with pin requires auth', function tGetTkPin(t) {
         var tok = TOKENS[0];
 
         mod_token.getPin(t, {
@@ -328,8 +324,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Get pivtoken with pin', function tGetTokenPin(t) {
-        CLIENT.clean();
+    PivTokenTest('Get pivtoken with pin', function tGetTokenPin(t) {
         var tok = TOKENS[1];
 
         mod_token.getPin(t, {
@@ -346,8 +341,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('List pivtokens', function tListTokens(t) {
-        CLIENT.clean();
+    PivTokenTest('List pivtokens', function tListTokens(t) {
         var tokens = mod_jsprim.deepCopy(TOKENS);
 
         tokens.forEach(function stripPin(tok) {
@@ -372,8 +366,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('List recovery tokens requires auth', function (t) {
-        CLIENT.clean();
+    PivTokenTest('List recovery tokens requires auth', function (t) {
         CLIENT.listRecoveryTokens({
             guid: TOKENS[0].guid
         }, function listCb(err, rTks, res) {
@@ -384,8 +377,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('List recovery tokens', function (t) {
-        CLIENT.clean();
+    PivTokenTest('List recovery tokens', function (t) {
         CLIENT.listRecoveryTokens({
             guid: TOKENS[0].guid,
             privkey: privKeys[0],
@@ -398,8 +390,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Create recovery token', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Create recovery token', function (t) {
         CLIENT.createRecoveryToken({
             guid: TOKENS[0].guid,
             privkey: privKeys[0],
@@ -413,8 +404,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Get recovery token', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Get recovery token', function (t) {
         CLIENT.getRecoveryToken({
             guid: TOKENS[0].guid,
             uuid: REC_TOKEN.uuid,
@@ -428,8 +418,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Update recovery token', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Update recovery token', function (t) {
         CLIENT.updateRecoveryToken({
             guid: TOKENS[0].guid,
             uuid: REC_TOKEN.uuid,
@@ -449,8 +438,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Verify Recovery tokens have been expired', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Verify Recovery tokens have been expired', function (t) {
         CLIENT.getTokenPin({
             guid: TOKENS[0].guid,
             privkey: privKeys[0],
@@ -468,8 +456,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Delete recovery token', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Delete recovery token', function (t) {
         CLIENT.deleteRecoveryToken({
             guid: TOKENS[0].guid,
             uuid: REC_TOKEN.uuid,
@@ -483,8 +470,7 @@ test('Initial setup', function tInitialSetup(suite) {
     });
 
 
-    suite.test('Create another recovery token', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Create another recovery token', function (t) {
         CLIENT.createRecoveryToken({
             guid: TOKENS[0].guid,
             params: {
@@ -502,8 +488,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Update recovery tokens (stage)', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Update recovery tokens (stage)', function (t) {
         // This is intentionally ignored at the client level, since it should
         // be used from kbmadm, not kbmctl.
         CLIENT.client.put({
@@ -532,8 +517,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Update recovery tokens (activate)', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Update recovery tokens (activate)', function (t) {
         // This is intentionally ignored at the client level, since it should
         // be used from kbmadm, not kbmctl.
         CLIENT.client.put({
@@ -562,8 +546,9 @@ test('Initial setup', function tInitialSetup(suite) {
             });
         });
     });
-    suite.test('Delete pivtoken requires auth', function tDelTkAuthRequired(t) {
-        CLIENT.clean();
+
+    PivTokenTest('Delete pivtoken requires auth',
+        function tDelTkAuthRequired(t) {
         mod_token.delete(t, {
             params: TOKENS[0],
             expErr: {
@@ -574,8 +559,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Delete pivtoken', function tDeleteToken(t) {
-        CLIENT.clean();
+    PivTokenTest('Delete pivtoken', function tDeleteToken(t) {
         mod_token.delete(t, {
             params: TOKENS[0],
             privkey: privKeys[0],
@@ -584,8 +568,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Lookup deleted pivtoken', function tGetDeletedToken(t) {
-        CLIENT.clean();
+    PivTokenTest('Lookup deleted pivtoken', function tGetDeletedToken(t) {
         mod_token.get(t, {
             params: {
                 guid: TOKENS[0].guid
@@ -598,8 +581,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('pivy-tool', function pivyCb(t) {
-        CLIENT.clean();
+    PivTokenTest('pivy-tool', function pivyCb(t) {
         var res;
         const cp = require('child_process');
         try {
@@ -650,6 +632,10 @@ test('Initial setup', function tInitialSetup(suite) {
                 pivytool: pivytool
             }, function reCreateTkCb(err2, body2, response2) {
                 t.ifError(err2, 'create token pivy signed err');
+                if (err2) {
+                    t.end();
+                    return;
+                }
                 t.ok(body2.recovery_tokens, 'missing recovery_tokens');
                 tk.recovery_tokens = body2.recovery_tokens;
                 t.deepEqual(body2, tk, 'body  expected to be equal to token');
@@ -667,8 +653,8 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('replace pivtoken needs HMAC auth', function replaceToken401(t) {
-        CLIENT.clean();
+    PivTokenTest('replace pivtoken needs HMAC auth',
+        function replaceToken401(t) {
         mod_token.recover(t, {
             params: {
                 guid: TOKENS[1].guid,
@@ -683,8 +669,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('replace pivtoken', function replacePivToken(t) {
-        CLIENT.clean();
+    PivTokenTest('replace pivtoken', function replacePivToken(t) {
         mod_token.recover(t, {
             params: {
                 guid: TOKENS[1].guid,
@@ -697,8 +682,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Get pivtoken PIN with admin key', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Get pivtoken PIN with admin key', function (t) {
         const privkey = path.resolve(__dirname, '../../../etc/sdc_key');
         if (!fs.existsSync(privkey)) {
             t.comment('No SDC public/private key files found');
@@ -718,8 +702,7 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-    suite.test('Get pivtoken PIN with invalid admin key', function (t) {
-        CLIENT.clean();
+    PivTokenTest('Get pivtoken PIN with invalid admin key', function (t) {
         CLIENT.getTokenPin({
             guid: '0F4FE4B9EF0C46FC89DA79B38A61A1A1',
             pubkey: fs.readFileSync(path.resolve(__dirname,

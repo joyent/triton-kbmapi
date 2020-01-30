@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright 2019, Joyent, Inc.
+# Copyright 2020 Joyent, Inc.
 #
 
 #
@@ -30,8 +30,6 @@ JSON_FILES	= package.json
 ESLINT_FILES	:= $(shell find lib client test -name '*.js') tools/bashstyle
 ESLINT		= ./node_modules/.bin/eslint
 
-# Not yet
-#BASH_FILES		:= sbin/kbmapid bin/kbmctl
 
 #
 # Configuration used by Makefile.smf.defs to generate "check" and "all" targets
@@ -100,11 +98,10 @@ test: $(NYC) $(FAUCET)
 # Packaging targets
 #
 
-# XXX: Add bash scripts to this once they're written
 .PHONY: release
 release: check all $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
-	@mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/kbmapi
+	@mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/$(NAME)
 	@mkdir -p $(RELSTAGEDIR)/site
 	@touch $(RELSTAGEDIR)/site/.do-not-delete-me
 	cp -r $(ROOT)/server.js \
@@ -120,7 +117,7 @@ release: check all $(SMF_MANIFESTS)
 		$(ROOT)/smf \
 		$(ROOT)/test \
 		$(ROOT)/build \
-		$(RELSTAGEDIR)/root/opt/smartdc/kbmapi/
+		$(RELSTAGEDIR)/root/opt/smartdc/$(NAME)/
 	mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/boot
 	cp -R $(ROOT)/deps/sdc-scripts/* $(RELSTAGEDIR)/root/opt/smartdc/boot
 	cp -R $(ROOT)/boot/* $(RELSTAGEDIR)/root/opt/smartdc/boot
