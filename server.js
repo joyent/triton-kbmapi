@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2018, Joyent, Inc.
+ * Copyright 2020, Joyent, Inc.
  */
 
 /*
@@ -14,9 +14,9 @@
 
 'use strict';
 
-var bunyan = require('bunyan');
-var kbmapi = require('./lib/app');
-var restify = require('restify');
+const bunyan = require('bunyan');
+const kbmapi = require('./lib/app');
+const restify = require('restify');
 
 
 var log = bunyan.createLogger({
