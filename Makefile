@@ -40,10 +40,10 @@ SMF_MANIFESTS_IN	= smf/manifests/kbmapi.xml.in smf/manifests/kbmtr.xml.in
 #
 # Makefile.defs defines variables used as part of the build process.
 #
-# minimal-64-lts 19.4.0
+
 ifeq ($(shell uname -s),SunOS)
-	NODE_PREBUILT_VERSION =	v6.17.1
-	NODE_PREBUILT_IMAGE = 5417ab20-3156-11ea-8b19-2b66f5e7a439
+	NODE_PREBUILT_VERSION =	v6.17.0
+	NODE_PREBUILT_IMAGE = c2c31b00-1d60-11e9-9a77-ff9f06554b0f
 	NODE_PREBUILT_TAG := zone64
 else
 	NPM=npm
@@ -67,8 +67,8 @@ ROOT		:= $(shell pwd)
 RELEASE_TARBALL	:= $(NAME)-pkg-$(STAMP).tar.gz
 RELSTAGEDIR	:= /tmp/$(NAME)-$(STAMP)
 
-# triton-origin-x86_64-19.4.0
-BASE_IMAGE_UUID = 59ba2e5e-976f-4e09-8aac-a4a7ef0395f5
+# triton-origin-x86_64-18.4.0
+BASE_IMAGE_UUID = a9368831-958e-432d-a031-f8ce6768d190
 BUILDIMAGE_NAME = $(NAME)
 BUILDIMAGE_DESC = Triton Key Backup and Management
 AGENTS		= config registrar
