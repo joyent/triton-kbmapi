@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 /*
@@ -14,7 +14,7 @@
 
 'use strict';
 
-var clone = require('clone');
+var jsprim = require('jsprim');
 var common = require('./common');
 var doneErr = common.doneErr;
 var mod_client = require('./client');
@@ -32,7 +32,7 @@ function createToken(t, opts, callback) {
     opts.reqType = 'create';
 
     var guid = opts.params.guid;
-    var params = clone(opts.params);
+    var params = jsprim.deepCopy(opts.params);
     delete params.guid;
 
     if (!opts.desc && opts.expErr) {
@@ -150,7 +150,7 @@ function deleteToken(t, opts, callback) {
     common.assertArgs(t, opts, callback);
     var client = opts.client || mod_client.get();
     var guid = opts.params.guid;
-    var params = clone(opts.params);
+    var params = jsprim.deepCopy(opts.params);
 
     log.debug({ params: opts.params }, 'deleting pivtoken');
     opts.id = guid;
@@ -189,7 +189,7 @@ function replaceToken(t, opts, callback) {
     common.assertArgs(t, opts, callback);
     var client = opts.client || mod_client.get();
     var guid = opts.params.guid;
-    var params = clone(opts.params);
+    var params = jsprim.deepCopy(opts.params);
 
     log.debug({ params: opts.params }, 'recovering pivtoken');
     opts.id = guid;
