@@ -150,7 +150,6 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
-
     suite.test('List PIVTokens', function (t) {
         h.kbmctl([
             'pivtoken',
@@ -167,16 +166,6 @@ test('Initial setup', function tInitialSetup(suite) {
                 'expected number of pivtokens');
             t.end();
         });
-    });
-
-    suite.test('Get PIVToken', function (t) {
-        // body...
-        t.end();
-    });
-
-    suite.test('Update PIVToken', function (t) {
-        // body...
-        t.end();
     });
 
     suite.test('Remove PIVToken', function (t) {
