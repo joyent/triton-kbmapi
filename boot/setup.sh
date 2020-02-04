@@ -47,7 +47,7 @@ mkdir -p /opt/smartdc/$role/etc
 /opt/local/bin/printf "$(echo ${METADATA} | json SDC_PRIVATE_KEY)" > /opt/smartdc/$role/etc/sdc_key
 
 # Add cmdline completion for `kbmctl`:
-/opt/smartdc/$role/bin/kbmctl completion >> /etc/bash/bash_completion.d/kbmctl
+/opt/smartdc/$role/build/node/bin/node /opt/smartdc/$role/bin/kbmctl completion >> /etc/bash/bash_completion.d/kbmctl
 echo "" >>/root/.profile
 echo "source '/etc/bash/bash_completion.d/kbmctl'" >>/root/.profile
 
