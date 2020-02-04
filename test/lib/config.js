@@ -14,15 +14,9 @@
 
 'use strict';
 
-var fmt = require('util').format;
-
-var KBMAPI_HOST = process.env.KBMAPI_HOST || 'localhost';
-var KBMAPI_PORT = process.env.KBMAPI_PORT || 80;
-
-var CONFIG = {
+module.exports = {
     kbmapi: {
-        host: fmt('http://%s:%d', KBMAPI_HOST, KBMAPI_PORT)
+        host: process.env.KBMAPI_HOST || 'localhost',
+        port: process.env.KBMAPI_PORT || 80
     }
 };
-
-module.exports = CONFIG;

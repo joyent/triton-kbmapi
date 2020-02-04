@@ -49,16 +49,8 @@ const privkeyPath = path.resolve(__dirname + '/../etc/sdc_key');
 const PRIVKEY = fs.readFileSync(privkeyPath, 'ascii');
 const PUBKEY = fs.readFileSync(privkeyPath + '.pub', 'ascii');
 
-var host = 'localhost';
-var port = process.env.KBMAPI_PORT || 80;
-
-if (config.host) {
-    host = config.host;
-} else if (process.env.KBMAPI_HOST) {
-    host = process.env.KBMAPI_HOST;
-} else {
-    port = config.port;
-}
+const host = process.env.KBMAPI_HOST || 'localhost';
+const port = process.env.KBMAPI_PORT || config.port || 80;
 
 const KBMAPI = new kbmapi({
     agent: false,
