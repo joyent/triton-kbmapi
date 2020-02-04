@@ -894,13 +894,13 @@ All the recovery token requests are authenticated using the 9e key of the PIV to
 
 Creating/updating recovery tokens have some rules regarding existing recovery tokens for a given PIV Token:
 
-- When a new recovery token is "created", if is there any existing recovery
-  token for the same PIV Token which hasn't been yet staged or activated,
+- When a new recovery token is "created", if there is any existing recovery
+  token for the same PIV Token which hasn't yet been staged or activated,
   it will be immediately expired.
-- When a new recovery token is "staged", if is there any existing recovery
-  token which hasn't yet been staged, it'll be immediately expired.
-- When a new recovery token is "activated", if is there any existing
-  recovery token which was active, it'll be immediately expired.
+- When a new recovery token is "staged", if there are any recovery
+  tokens which haven't yet been staged, they will be immediately expired.
+- When a new recovery token is "activated", if there are any existing
+  recovery tokens which were active, they will be immediately expired.
 
 #### ListRecoveryTokens (GET /pivtokens/:guid/recovery-tokens)
 
