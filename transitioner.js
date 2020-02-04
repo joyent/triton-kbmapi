@@ -49,12 +49,13 @@
  * than KBMAPI_HISTORY_DURATION setting.
  *
  */
+
+const EventEmitter = require('events');
 const util = require('util');
 
 const assert = require('assert-plus');
 const bunyan = require('bunyan');
 const jsprim = require('jsprim');
-const mooremachine = require('mooremachine');
 const moray = require('moray');
 const restify = require('restify');
 const vasync = require('vasync');
@@ -89,143 +90,94 @@ function KbmApiTransitioner(opts) {
             opts.config.testBucketPrefix.replace(/-/g, '_'));
     }
 
-    mooremachine.FSM.call(this, 'waiting');
+    EventEmitter.call(this);
 }
 
-util.inherits(KbmApiTransitioner, mooremachine.FSM);
+util.inherits(KbmApiTransitioner, EventEmitter);
 
 /**
  * Starts the transitioner service
  */
 KbmApiTransitioner.prototype.start = function start() {
-    this.emit('startAsserted');
+    const self = this;
+
+    var context = {
+        log: this.log,
+        config: this.config
+    };
+
+    vasync.pipeline({
+        arg: context,
+        funcs: [
+            function initMemlogger(ctx, next) {
+                ctx.log.info({ period: USAGE_PERIOD },
+                    'Starting periodic logging of memory usage');
+                self.usageTimer = setInterval(periodicUsageLog,
+                    USAGE_PERIOD, ctx.log);
+                next();
+            },
+
+            function initMoray(ctx, next) {
+                if (self.moray) {
+                    next();
+                    return;
+                }
+
+                var conf = jsprim.deepCopy(self.config.moray);
+
+                ctx.log.debug(conf, 'Creating moray client');
+
+                conf.log = ctx.log.child({
+                    component: 'moray',
+                    level: self.config.moray.logLevel || 'info'
+                });
+
+                self.moray = moray.createClient(conf);
+
+                self.moray.once('connect', function onMorayConnect() {
+                    ctx.log.info('moray: connected');
+                    next();
+                });
+
+                self.moray.once('error', function onMorayError(err) {
+                    self.initErr = new VError(err, 'moray: connection failed');
+                    next(err);
+                });
+            },
+
+            function initCnapi(ctx, next) {
+                if (self.cnapi) {
+                    next();
+                    return;
+                }
+                var conf = jsprim.deepCopy(self.config.cnapi);
+                ctx.log.debug(conf, 'Creating CNAPI client');
+
+                conf.log = self.log.child({
+                    component: 'cnapi',
+                    level: ctx.config.logLevel || 'info'
+                });
+
+                self.cnapi = new CNAPI(conf);
+                next();
+            }
+
+        ]
+    }, function initDone(initErr) {
+        if (!initErr) {
+            self.emit('initialized');
+        } else {
+            self.stop(function () {
+                throw initErr;
+            });
+        }
+    });
 };
 
 /**
  * Stops the transitioner service
  */
-KbmApiTransitioner.prototype.stop = function stop(callback) {
-    assert.ok(this.isInState('running'));
-    this.emit('stopAsserted', callback);
-};
-
-
-KbmApiTransitioner.prototype.state_waiting = function (S) {
-    S.validTransitions(['init']);
-
-    S.on(this, 'startAsserted', function () {
-        S.gotoState('init');
-    });
-};
-
-KbmApiTransitioner.prototype.state_init = function (S) {
-    S.gotoState('init.memlogger');
-};
-
-KbmApiTransitioner.prototype.state_init.memlogger = function (S) {
-    this.log.info({ period: USAGE_PERIOD },
-        'Starting periodic logging of memory usage');
-    this.usageTimer = setInterval(periodicUsageLog, USAGE_PERIOD, this.log);
-    S.gotoState('init.cnapi');
-};
-
-KbmApiTransitioner.prototype.state_init.cnapi = function (S) {
-    var self = this;
-    S.validTransitions(['failed', 'init.moray']);
-
-    if (self.cnapi) {
-        S.gotoState('init.moray');
-        return;
-    }
-
-    var conf = jsprim.deepCopy(self.config.cnapi);
-    self.log.debug(conf, 'Creating CNAPI client');
-
-    conf.log = self.log.child({
-        component: 'cnapi',
-        level: self.config.logLevel || 'info'
-    });
-
-    self.cnapi = new CNAPI(conf);
-
-    S.gotoState('init.moray');
-};
-
-KbmApiTransitioner.prototype.state_init.moray = function (S) {
-    var self = this;
-
-    S.validTransitions([ 'failed', 'running' ]);
-
-    if (self.moray) {
-        S.gotoState('running');
-        return;
-    }
-
-    var conf = jsprim.deepCopy(self.config.moray);
-
-    self.log.debug(conf, 'Creating moray client');
-
-    conf.log = self.log.child({
-        component: 'moray',
-        level: self.config.moray.logLevel || 'info'
-    });
-
-    self.moray = moray.createClient(conf);
-
-    S.on(self.moray, 'connect', function onMorayConnect() {
-        self.log.info('moray: connected');
-        S.gotoState('running');
-    });
-
-    S.on(self.moray, 'error', function onMorayError(err) {
-        self.initErr = new VError(err, 'moray: connection failed');
-        S.gotoState('failed');
-    });
-};
-
-
-KbmApiTransitioner.prototype.state_running = function (S) {
-    var self = this;
-
-    S.validTransitions([ 'stopping' ]);
-
-    S.on(self, 'stopAsserted', function (callback) {
-        self.stopcb = callback;
-        S.gotoState('stopping');
-    });
-
-    S.immediate(function () {
-        self.emit('initialized');
-    });
-};
-
-KbmApiTransitioner.prototype.state_failed = function (S) {
-    var self = this;
-
-    S.validTransitions([]);
-
-    self._cleanup(function () {
-        self.emit('error', self.initErr);
-    });
-};
-
-KbmApiTransitioner.prototype.state_stopping = function (S) {
-    var self = this;
-
-    S.validTransitions([ 'stopped' ]);
-
-    self._cleanup(function cleanupCb(err) {
-        self.stoperr = err;
-        S.gotoState('stopped');
-    });
-};
-
-KbmApiTransitioner.prototype.state_stopped = function (S) {
-    S.validTransitions([]);
-    setImmediate(this.stopcb, this.stoperr);
-};
-
-KbmApiTransitioner.prototype._cleanup = function (callback) {
+KbmApiTransitioner.prototype.stop = function (callback) {
     var self = this;
 
     if (self.moray) {
