@@ -16,7 +16,7 @@ markdown2extras: code-friendly
 
 The goal of this is to provide an API that will be used to manage the
 pivtokens on Triton compute nodes containing encrypted zpools.
-The details are largely in [RFD 77](https://github.com/joyent/rfd/blob/master/rfd/0077/README.adoc) still.
+The details are largely in [RFD 173](https://github.com/joyent/rfd/blob/master/rfd/0173/README.adoc) still.
 
 The tl;dr is that when a CN boots, it will authenticate itself to KBMAPI,
 and then request the pin to unlock its local PIV token.  Once unlocked, it
@@ -64,7 +64,7 @@ used for attestation.
 Additionally, an operator may wish to limit the PIV tokens that are allowed to
 be used with KBMAPI to a known set of PIV tokens.  To do so, an operator would
 set the SAPI parameter `KBMAPI_REQUIRE_TOKEN_PRELOAD` to `true`.  A command
-line tool (working name 'kbmapi') is then used by the operator to load the
+line tool (working name 'kbmctl') is then used by the operator to load the
 range of serial numbers into KBMAPI.  This is only supported for PIV tokens that
 support attestation (e.g. Yubikeys).  In other words, enabling
 `KBMAPI_REQUIRE_TOKEN_PRELOAD` requires `KBMAPI_REQUIRE_ATTESTATION` to also
@@ -153,7 +153,7 @@ Note that when provisioning a PIV token, if any of the optional fields are known
 
 As a failsafe measure, when a PIV token is deleted, the entry from the PIV token
 bucket is saved into a history bucket.  This bucket retains up to
-`KBMAPI_HISTORY_DURATION` days of PIV token data (see [#kbmapi-history]).
+`KBMAPI_HISTORY_DURATION` days of PIV token data (see [kbmapi-history](#kbmapi-history)).
 
 The history bucket looks very similar to the PIV token bucket:
 
@@ -181,7 +181,7 @@ same as the PIV token bucket:
 
 ```
 {
-    "active_range": "[2019-01-01 00:00:00, 2019-03-01 05:06:07]",
+    "active_range": "[2019-01-01T00:00:00Z, 2019-03-01T05:06:07Z]",
     "model": "Yubico Yubikey 4",
     "serial": 5213681,
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
@@ -273,14 +273,11 @@ The `kbmctl` command is used to manage this data.
 
 NOTE: Audit trail is not supported by KBMAPI v1.0
 
-Given the critical nature of the PIV token data, we want to provide an audit
-trail of activity.  While there is discussion of creating an AuditAPI at
-some point in the future, it currently does not look like it would be available
-to meet the current deadlines.  Once available, we should look at the effort
-to migrate this functionality to AuditAPI.
-
-In the meantime, we will provide the option of uploading the KBMAPI logs to
-a Manta installation using hermes.
+Given the critical nature of the PIV token data, it is desirable to maintain an
+audit trail of activity. KBMAPI does not provide a native mechanism for
+replicating the audit trail to another system. It is recommended that the
+Triton log archiver or another log shipping tool is used to safely store the
+KBMAPI log file, /var/svc/log/smartdc-application-kbmapi:default.log.
 
 ### Responses
 
@@ -511,7 +508,7 @@ Response-Time: 42
 }
 ```
 
-In order to make the request/response retry-able w/o generating and saving a new
+In order to make the request/response retry-able without generating and saving a new
 `recovery_token` each time (to prevent a single recovery configuration update
 from creating multiple `recovery_tokens` due to network/retry issues), any
 requests made after the initial PIV token creation to the same `Location` (i.e.
@@ -554,7 +551,7 @@ Accept: application/json
 
 {
     "model": "Yubico Yubikey 4",
-    "serial": 5213681,
+    "serial": "5213681",
     "cn_uuid": "99556402-3daf-cda2-ca0c-f93e48f4c5ad",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
     "pin": "123456",
@@ -639,7 +636,7 @@ Accept: application/json
 
 {
     "model": "Yubico Yubikey 4",
-    "serial": 6324923,
+    "serial": "6324923",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "75CA077A14C5E45037D7A0740D5602A5",
     "pin": "424242",
@@ -672,7 +669,7 @@ Response-Time: 42
 
 {
     "model": "Yubico Yubikey 4",
-    "serial": 5213681,
+    "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "75CA077A14C5E45037D7A0740D5602A5",
     "pubkeys": {
@@ -682,8 +679,8 @@ Response-Time: 42
     },
     "recovery_tokens": [
         {
-            created: 1563348710384,
-            token: 'cefb9c2001b535b697d5a13ba6855098e8c58feb800705092db061343bb7daa10e52a97ed30f2cf1'
+            "created": "2019-11-06T15:49:11.101Z",
+            "token": "cefb9c2001b535b697d5a13ba6855098e8c58feb800705092db061343bb7daa10e52a97ed30f2cf1"
         }
     ]
 }
@@ -784,7 +781,7 @@ Response-Time: 55
 
 {
    "model": "Yubico Yubikey 4",
-   "serial": 5213681,
+   "serial": "5213681",
    "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
    "guid": "97496DD1C8F053DE7450CD854D9C95B4"
    "pubkeys": {
@@ -831,7 +828,7 @@ Response-Time: 1
 
 {
     "model": "Yubico Yubikey 4",
-    "serial": 5213681,
+    "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
     "pin": "123456",
@@ -881,18 +878,22 @@ Request-Id: f36b8a41-5841-6c05-a116-b517bf23d4ab
 Response-Time: 997
 ```
 
-Note: alternatively, an operator can manually run kbmadm to delete an entry.
+Note: alternatively, an operator can manually run `kbmctl` to delete an entry.
 
 A destroyed PIV token is automatically added to `token_history`.
 
 ## Recovery Tokens
 
-In order to simplify the management of recovery tokens from the CN's where recovery configurations are being staged or activated,
-convenience end-points for recovery tokens and the PIV Token that the recovery tokens are associated to.
+In order to simplify the management of recovery tokens from the CN's where
+recovery configurations are being staged or activated, convenience
+end-points for recovery tokens and the PIV Token that the recovery tokens are
+associated to.
 
-All the recovery token requests are authenticated using the 9e key of the PIV token the recovery token(s) belong to.
+All the recovery token requests are authenticated using the 9e key of the
+PIVToken the recovery token(s) belong to.
 
-Creating/updating recovery tokens have some rules regarding existing recovery tokens for a given PIV Token:
+Creating/updating recovery tokens have some rules regarding existing recovery
+tokens for a given PIV Token:
 
 - When a new recovery token is "created", if there is any existing recovery
   token for the same PIV Token which hasn't yet been staged or activated,
@@ -1138,17 +1139,25 @@ X-Request-Processing-Time: 23
 ## Recovery Configuration(s)
 
 We need to support the following features related to recovery config propagation:
-1. A mechanism to ensure that we do not push recovery config X until recovery config X-1 has been sucessfully activated on all consumers.
-2. An override mechanism that allows recovery config X to be pushed to consumers before earlier configs are known to be active.
-3. A means to test the most recent recovery config before activation across the general population.
+1. A mechanism to ensure that we do not push recovery config X until recovery
+   config X-1 has been sucessfully activated on all consumers.
+2. An override mechanism that allows recovery config X to be pushed to consumers
+   before earlier configs are known to be active.
+3. A means to test the most recent recovery config before activation across the
+   general population.
 4. The ability to not activate a recovery configuration that has been staged.
 
 Which was translated into:
-1. KBMAPI must maintain an inventory of where each configuration is present and whether it is staged or active. This inventory needs to be robust in the face of down or rebooting nodes at any point during the staging and activation phases.
+1. KBMAPI must maintain an inventory of where each configuration is present and
+   whether it is staged or active. This inventory needs to be robust in the face
+   of down or rebooting nodes at any point during the staging and activation
+   phases.
 2. There must be a way to unstage or replace a staged recovery configuration.
-3. A mechanism for activating a staged configuration on a single compute node must exist.
+3. A mechanism for activating a staged configuration on a single compute node
+   must exist.
 
-Each configuration object contains a template, which is a base64 encoded string created by the cmd `pivy-box template create -i <name> ...`.
+Each configuration object contains a template, which is a base64 encoded string
+created by the cmd `pivy-box template create -i <name> ...`.
 
 Here is how a template is created using `pivy-box` interactive mode:
 
@@ -1257,13 +1266,30 @@ var uuid = [
 
 ### Recovery configurations lifecycle
 
-Recovery configurations will go through a Finite State Machine during their expected lifecycles. The following are the definitions of all the possible states for recovery configurations:
+Recovery configurations will go through a Finite State Machine during their
+expected lifecycles. The following are the definitions of all the possible
+states for recovery configurations:
 
-* `new`: This state describes the raw parameters for the recovery configuration (mostly `template`) before the HTTP request to create the recovery configuration record in KBMAPI has been made.
-* `created`: Once the recovery configuration has been created into KBMAPI through the HTTP request to `POST /recovery_configurations`. The recovery configuration now has a unique `uuid`, the attribute `created` has been added and, additionally, the process to stage this configuration through all the Compute Nodes using EDAR has been automatically started. (TBD: Shall this really be automatic or should we make it require a explicit HTTP request, just in case we want to just stage + activate on a single CN for testing before we proceed with every CN?)
-* `staged`: The recovery configuration has been spread across all the CNs using EDAR (or at least to all the CNs using EDAR available at the moment we made the previous HTTP request). Confirmation has been received by KBMAPI that the _"staging"_ process has been finished.
-* `active`: The request to activate the configuation across all the CNs where it has been previously staged has been sent to KBMAPI. The transition from `staged` to `active` will take some time. We need to keep track of the transition until it finishes.
-* `expired`: When a given recovery configuration has been replaced by some other and we no longer care about it being deployed across the different CNs using EDAR. This stage change for recovery configurations is a side effect of another configuration transitioning to `active`.
+* `new`: This state describes the raw parameters for the recovery configuration
+  (mostly `template`) before the HTTP request to create the recovery
+  configuration record in KBMAPI has been made.
+* `created`: Once the recovery configuration has been created into KBMAPI
+  through the HTTP request to `POST /recovery_configurations`. The recovery
+  configuration now has a unique `uuid`, the attribute `created` has been added.
+  The process to stage this configuration through encrypted Compute Nodes needs
+  an additional HTTP request (usually triggered by `kbmctl recovery stage`)
+* `staged`: The recovery configuration has been spread across encrypted Compute
+  Nodes (or at least to all encrypted Compute Nodes available at the moment we
+  made the previous HTTP request). Confirmation has been received by KBMAPI that
+  the _"staging"_ process has been finished.
+* `active`: The request to activate the configuation across all the CNs where it
+  has been previously staged has been sent to KBMAPI. The transition from
+  `staged` to `active` will take some time. We need to keep track of the
+  transition until it finishes.
+* `expired`: When a given recovery configuration has been replaced by some other
+  and we no longer care about it being deployed across the different encrypted
+  Compute Nodes. This stage change for recovery configurations is a side effect
+  of another configuration transitioning to `active`.
 
 
 ```
@@ -1290,33 +1316,44 @@ Recovery configurations will go through a Finite State Machine during their expe
   +---------+
 ```
 
-While there is an `expired` state, a given recovery configuration can only reach such state when another one has been activated. There's no value in keeping around an "expired" recovery configuration other than allowing operators to reuse the same configuration several times w/o having to remove previous records due to the requirement for UUID uniqueness and the way it's generated through template hash. This configuration needs to be re-staged to all the CNs again, exactly the same way as if it were a new one.
+While there is an `expired` state, a given recovery configuration can only reach
+such state when another one has been activated. There's no value in keeping
+around an "expired" recovery configuration other than allowing operators to
+reuse the same configuration several times without having to remove previous
+records due to the requirement for UUID uniqueness and the way it's generated
+through template hash. This configuration needs to be re-staged to all the CNs
+again, exactly the same way as if it were a new one.
 
-Requirements:
-- We need to be able to recover from CNAPI being down either at the beginning or in the middle of a transition.
-- We need to be able to recover from KBMAPI going down in the middle of a transition.
-- We need to be able to provide information regarding a transition not only to the client which initiated the process with an HTTP request, but to any other client instance, due to console sessions finishing abruptly or just for convenience.
-- We need to be able to _"undo"_ transitions. It's to say, cancel and revert `staging` or `activation` processes in progress.
-- We agree that it's OK to begin these _"undo"_ processes when the process we're trying to rollback has reached an acceptable level of progress. For example, if we want to deactivate a recovery configuration whose activation is in progress, taking batches of 10 CNs at time, and we have already processed 20 CNs and are in the middle of the process of the next 10, it'll be OK to wait until the activation of those 10 CNs has been completed before we stop the activation of any more CNs and begin the deactivation of the 30 CNs we are already done with.
-- We may have more than one KBMAPI instance (HA-Ready) and each one of these instances may receive requests to report either progress on the transition or current list of CNs with one or other recovery configuration active.
+A persistent cache is used by the process that is currently orchestrating state
+transitions. This allows:
+- Recovery from CNAPI being down either at the beginning or in the middle of a
+  transition.
+- Recovery from KBMAPI going down in the middle of a transition.
+- The ability to provide information regarding a transition not only to the
+  client which initiated the process with an HTTP request, but to any other
+  client instance, due to console sessions finishing abruptly or just for
+  convenience.
 
-With all these requirements, we need to have a **persistent cache** which can be accessed not only by the process currently orchestrating the transition between two possible recovery configuration state, but by any other process or instance trying to provide information regarding such process or the consequences of it. We need to have a process which will orchestrate the transition, updating this persistent cache with progress as needed. This process will also **lock** the transition so there cannot be another attempt to run it from more than one process at time.
-
-This persistent cache will store, for each transition, the following information:
+This persistent cache will store, for each transition, the following
+information:
 - The recovery configuration this transition belongs to.
-- List of CNs/PIV Tokens to take part in the transition process (probably will be just the CNs using EDAR which are running at the moment the transition has been started)
-- List of CNs where the transition has been completed and, in case of failure, as much information as possible regarding such failures.
-- List of `taskid` for each CN where the transition is in progress. These will match with `taskid` for cn-agent into each CN which can be accessed through CNAPI using either `GET /tasks/:task_id` or `GET /tasks/:task_id/wait`.
+- List of CNs/PIV Tokens to take part in the transition process (probably will
+  be just the encrypted Compute Nodes which are running at the moment the
+  transition has been started)
+- List of CNs where the transition has been completed and, in case of failure,
+  as much information as possible regarding such failures.
+- List of `taskid` for each CN where the transition is in progress. These will
+  match with `taskid` for cn-agent into each CN which can be accessed through
+  CNAPI using either `GET /tasks/:task_id` or `GET /tasks/:task_id/wait`.
 - An indicator of wether or not the transition has been aborted.
-- An indicator of whether or not the transition is running (possibly the unique identifier of the process orchestrating the transition)
+- An indicator of whether or not the transition is running. 
 
-KBMAPI should provide:
-- A process to orchestrate (run) the transitions (possibly backed up by a transient SMF service, which will come up handy in case of process exiting)
+KBMAPI provides:
+- A process to orchestrate (run) the transitions (backed up by a SMF service)
 - An end-point to watch transitions progress.
 
-
-
-We will have a moray bucket called `kbmapi_recovery_configs` with the following JSON config:
+We will have a moray bucket called `kbmapi_recovery_configs` with the following
+JSON config:
 
 ```json=
 {
@@ -1327,7 +1364,6 @@ We will have a moray bucket called `kbmapi_recovery_configs` with the following 
             "uuid": { "type": "uuid", "unique": true },
             "hash": { "type": "string", "unique": true },
             "template": { "type": "string" },
-            "state": { "type": "string" },
             "created": {"type": "date"},
             "staged": {"type": "date"},
             "activated": {"type": "date"},
@@ -1337,11 +1373,10 @@ We will have a moray bucket called `kbmapi_recovery_configs` with the following 
 }
 ```
 
-Note the `state` field will include not only the final FSM states, but also the transitioning states so possible values are: `created`, `staging`, `unstaging`, `staged`, `activating`, `deactivating`, `active`, `expired` and `reactivating`. There's no transition associated with `expired` status, b/c that happens as a result of another configuration becoming the active one.
-
 We may want to keep a list of configurations for historical purposes.
 
-The persistent transition cache will be stored into another moray bucket with the following structure:
+The persistent transition cache will be stored into another moray bucket with
+the following structure:
 
 ```json=
 {
@@ -1364,9 +1399,12 @@ The persistent transition cache will be stored into another moray bucket with th
 }
 ```
 
-Where `targets` is the collection of CNs which need to be updated, `completed` is the list of those we're already done with, `wip` are the ones we're modifying right now and `taskids` are the CNAPI's provided `taskid` for each one of the CNs included in `wip` so we can check progress of such tasks using CNAPI. `locked_by` should be the UUID of the process which is currently orchestrating the transition.
-
-We need to provide a way to check for stale processes leaving a transition locked. Having a way to periodically check for such processes sanity would be ideal. Looking for moray's `_mtime_` for the transition object and compare against a default timeout would be a fine starting point.
+Where `targets` is the collection of CNs which need to be updated, `completed`
+is the list of those we're already done with, `wip` are the ones we're
+modifying right now and `taskids` are the CNAPI's provided `taskid` for each
+one of the CNs included in `wip` so we can check progress of such tasks using
+CNAPI. `locked_by` is the UUID of the `kbmtr` process which is currently
+orchestrating the transition.
 
 ## End-points
 
@@ -1397,7 +1435,7 @@ The following end-point and routes will be created:
 | template   |  Yes     | Base64 encoded recovery configuration template.|
 | concurrency|  No      | Number of ComputeNodes to update concurrently (default 10).|
 | force      |  No      | Boolean, allow the addition of a new recovery config even if the latest one hasn't been staged (default false). |
-| stage      |  No      | Boolean, automatically proceed with the staging of the recovery configuration across all nodes using EDAR w/o waiting for the HTTP request for `stage`.|
+| stage      |  No      | Boolean, automatically proceed with the staging of the recovery configuration across all encrypted Compute Nodes without waiting for the HTTP request for `stage`.|
 
 
 ### WatchRecoveryConfigTransition (GET /recovery_configs/:uuid?action=watch&transition=\<name\>)
@@ -1409,15 +1447,24 @@ The following end-point and routes will be created:
 
 Watch the transition from one recovery config state to the next one in the FSM.
 
-This end-point will provide details regarding the transition progress using a JSON Stream of CNs which are or have already completed the transition, together with an eventual error message in case the transition failed for any of these CNs. When the transition has finished for all the CNs a final `END` event will be sent and the connection will be closed.
+This end-point will provide details regarding the transition progress using a
+JSON Stream of CNs which are or have already completed the transition, together
+with an eventual error message in case the transition failed for any of these
+CNs. When the transition has finished for all the CNs a final `END` event will
+be sent and the connection will be closed.
 
 The format of these `Transition Progress Events` is still TBD.
 
-In case a configuration has already finished the given transition, the stream will be automatically closed right after the first response has been sent.
+In case a configuration has already finished the given transition, the stream
+will be automatically closed right after the first response has been sent.
 
 ### ListRecoveryConfigs (GET /recovery_configs)
 
-Get a list of recovery configurations. Note that both, this and the ShowRecoveryConfig end-points will grab all the existing PIV tokens in KBMAPI and provide a counter of how many PIV tokens are using each config. Additionally, the show recovery config will provide the uuids (hostnames too?) of the CNs using a given recovery configuration.
+Get a list of recovery configurations. Note that both, this and the
+ShowRecoveryConfig end-points will grab all the existing PIV tokens in KBMAPI
+and provide a counter of how many PIV tokens are using each config.
+Additionally, the show recovery config will provide the uuids (hostnames too?)
+of the CNs using a given recovery configuration.
 
 ### ShowRecoveryConfig (GET /recovery_configs/:uuid)
 
@@ -1425,7 +1472,9 @@ Get a list of recovery configurations. Note that both, this and the ShowRecovery
 | ---------- | -------- | ----------- |
 | uuid       |  Yes     | The uuid of the recovery configuration to retrieve.|
 
-This returns a JSON object containing the selected recovery configuration. This is a JSON object like:
+This returns a JSON object containing the selected recovery configuration. This
+is a JSON object like:
+
 ```json=
 {
     "uuid": "f85b894e-d02c-5b1c-b2ea-0564ef55ee24",
@@ -1446,17 +1495,19 @@ This returns a JSON object containing the selected recovery configuration. This 
 | concurrency|  No      | Number of ComputeNodes to update concurrently (default 10).|
 | pivtoken   |  No      | In case we want to stage this configuration just for a given pivtoken (on a given Compute Node)|
 
-Note that in case `pivtoken` guid is provided, the recovery configuration state will not change.
+Note that in case `pivtoken` guid is provided, the recovery configuration state
+will not change.
 
 ### UnstageRecoveryConfig (PUT /recovery_configs/:uuid?action=unstage)
 
 | Field      | Required | Description |
 | ---------- | -------- | ----------- |
-| uuid.      |  Yes     | The uuid of the recovery configuration to unstage.|
+| uuid       |  Yes     | The uuid of the recovery configuration to unstage.|
 | concurrency|  No      | Number of ComputeNodes to update concurrently (default 10).|
 | pivtoken   |  No      | In case we want to unstage this configuration just for a given pivtoken (on a given Compute Node)|
 
-Note that in case `pivtoken` guid is provided, the recovery configuration state will not change.
+Note that in case `pivtoken` guid is provided, the recovery configuration state
+will not change.
 
 ### ActivateRecoveryConfig (PUT /recovery_configs/:uuid?action=activate)
 
@@ -1466,17 +1517,19 @@ Note that in case `pivtoken` guid is provided, the recovery configuration state 
 | concurrency|  No      | Number of ComputeNodes to update concurrently (default 10).|
 | pivtoken   |  No      | In case we want to activate this configuration just for a given pivtoken (on a given Compute Node)|
 
-Note that in case `pivtoken` guid is provided, the recovery configuration state will not change.
+Note that in case `pivtoken` guid is provided, the recovery configuration state
+will not change.
 
 ### DeactivateRecoveryConfig (PUT /recovery_configs/:uuid?action=deactivate)
 
 | Field      | Required | Description |
 | ---------- | -------- | ----------- |
-| uuid.      |  Yes     | The uuid of the recovery configuration to deactivate.|
+| uuid       |  Yes     | The uuid of the recovery configuration to deactivate.|
 | concurrency|  No      | Number of ComputeNodes to update concurrently (default 10).|
 | pivtoken   |  No      | In case we want to deactivate this configuration just for a given pivtoken (on a given Compute Node)|
 
-Note that in case `pivtoken` guid is provided, the recovery configuration state will not change.
+Note that in case `pivtoken` guid is provided, the recovery configuration state
+will not change.
 
 ### RemoveRecoveryConfig (DELETE /recovery_configs/:uuid)
 
@@ -1488,19 +1541,27 @@ Only a recovery configuration that isn't in use by any CN can be removed.
 
 ### Other notes
 
-Note that we need at least one **recovery config** for everything to work properly. We'll need to figure out a way to provide such configuration either during initial headnode setup or during initial kbmapi install ...
+Note that we need at least one **recovery config** for everything to work
+properly. We'll need to figure out a way to provide such configuration either
+during initial headnode setup or during initial kbmapi install ...
 
-At first pass we'll assume that there are no encrypted CNs at all and that if we want to encrypt some, we'll provide a mechanism to grab this config from the CN before we move ahead with the setup.
+A recovery configuration must be activated before the first encrypted CN can be
+set up. If a recovery configuration is not present, any attempt to create a
+PIVToken will give the following error:
 
-For now, we'll just ensure that KBMAPI will reply with a hint regarding the need of adding a recovery configuration before we can add new PIV tokens.
+    Invalid Parameters Error: cannot create a PIVToken without a valid recovery configuration
+
 
 ## Inventory: Recovery Configs associated with PIV tokens
 
-There are different possible options to keep an up to date inventory of which recovery configuration is already staged and/or active into each CN with encrypted zpools (and therefore which recovery tokens associated with those recovery configurations have been generated for the PIV tokens associated with these CNs).
+The list of PIV Tokens stored by KBMAPI can be used as a cache of which
+configurations are present into each encrypted Compute Node. Each one of these
+PIV tokens have one or more recovery tokens associated with a given recovery
+configuration.
 
-The list of PIV Tokens stored by KBMAPI can be used as a cache of which configurations are present into each CN using EDAR. Each one of these PIV tokens have one or more recovery tokens associated with a given recovery configuration.
-
-For example, for a CN with UUID `15966912-8fad-41cd-bd82-abe6468354b5` which has been created when a recovery configuration with hash `f85b894ed0...` was active, we'll initially have the following object with one associated recovery token:
+For example, for a CN with UUID `15966912-8fad-41cd-bd82-abe6468354b5` which has
+been created when a recovery configuration with hash `f85b894ed0...` was active,
+we'll initially have the following object with one associated recovery token:
 
 ```
 {
@@ -1528,9 +1589,13 @@ For example, for a CN with UUID `15966912-8fad-41cd-bd82-abe6468354b5` which has
 }
 ```
 
-Note that in this initial case, the values for `recovery_tokens[0].created` and `recovery_tokens[0].activated` are the same, b/c this is the value we used for the initial CN setup.
+Note that in this initial case, the values for `recovery_tokens[0].created` and
+`recovery_tokens[0].activated` are the same, because this is the value we used
+for the initial CN setup.
 
-If we have the need to generate another recovery token for this same PIV token, while the same configuration object is active, we'll have the following modification to the PIV token's `recovery_tokens` member:
+If we have the need to generate another recovery token for this same PIV token,
+while the same configuration object is active, we'll have the following
+modification to the PIV token's `recovery_tokens` member:
 
 ```
 {
@@ -1553,9 +1618,12 @@ If we have the need to generate another recovery token for this same PIV token, 
 }
 ```
 
-The moment the new recovery_token has been activated, the previous one will be expired.
+The moment the new recovery\_token has been activated, the previous one will be
+expired.
 
-Then, when we add a new recovery configuration, a new recovery token will be added to each KBMAPI's PIV token and this information will be stored into the CN too. We'll call this latest recovery token to be _"staged"_.
+Then, when we add a new recovery configuration, a new recovery token will be
+added to each KBMAPI's PIV token and this information will be stored into the CN
+too. We'll call this latest recovery token to be _"staged"_.
 
 ```
 {
@@ -1582,7 +1650,9 @@ Then, when we add a new recovery configuration, a new recovery token will be add
 }
 ```
 
-Once we activate a recovery configuration already staged into all our active CNs using EDAR, each CN will update its local information accordingly and the KBMAPI's PIV token object will look as follows:
+Once we activate a recovery configuration already staged into all our active
+encrypted Compute Nodes, each CN will update its local information accordingly
+and the KBMAPI's PIV token object will look as follows:
 
 ```
 {
@@ -1605,11 +1675,19 @@ Once we activate a recovery configuration already staged into all our active CNs
 }
 ```
 
-Note there is no need to keep more than the recovery tokens asociated with the currently active and staged configurations. Previous recovery tokens can be removed as part of the process of adding/activating a new one, given the information they provide will be useless at this point and in the future.
+There is no need to keep more than the recovery tokens asociated with the
+currently active and staged configurations. Previous recovery tokens can be
+removed as part of the process of adding/activating a new one, given the
+information they provide will be useless at this point and in the future.
 
 #### Implementation details
 
-In order to provide reasonable search options for client applications trying to figure out which recovery configuration is active or staged into each Compute Node, storing the recovery tokens as an array within the PIV Tokens moray bucket is not the better approach. Instead, we'll use a specific bucket where we'll save each token's properties and references to the PIV token that owns the recovery token, and the recovery configuration used for that token.
+In order to provide reasonable search options for client applications trying to
+figure out which recovery configuration is active or staged into each Compute
+Node, storing the recovery tokens as an array within the PIV Tokens moray bucket
+is not the better approach. Instead, we'll use a specific bucket where we'll
+save each token's properties and references to the PIV token that owns the
+recovery token, and the recovery configuration used for that token.
 
 
 ```json=
@@ -1629,19 +1707,21 @@ In order to provide reasonable search options for client applications trying to 
 }
 ```
 
-These recovery tokens will then be fetched from the PIV tokens model and loaded sorted by `created` value.
+These recovery tokens will then be fetched from the PIV tokens model and loaded
+sorted by `created` value.
 
-For new recovery config `staging` the CNs will be interested in the recovery config hash and template so those values should be provided together with the recovery token in order to avoid the need for another HTTP request.
+For new recovery config `staging` the CNs will be interested in the recovery
+config hash and template so those values should be provided together with the
+recovery token in order to avoid the need for another HTTP request.
 
-For other actions like `activate`, `cancel`, `remove` ... the recovery config uuid would do just fine (or the hash, since it can also be used to refer the same resource).
+For other actions like `activate`, `cancel`, `remove` ... the recovery config
+uuid would do just fine (or the hash, since it can also be used to refer the
+same resource).
 
 ### Inventory Update
 
-During the add/activate new config phase, there are different possible ways to keep inventory _"up to date"_, meaning that PIV tokens stored into KBMAPI DB cache should reflect the reality of what is already present in the CNs using EDAR.
-
-Of these, the most simple one is to just wait for each addition/activation/removal (... whatever the KBMAPI task) to be completed. Using this approach there will be no need at all for changefeed publisher or subscribers.
-
-
+During the add/activate new config phase we keep inventory just waiting for each
+addition/activation/removal (... whatever the KBMAPI task) to be completed.
 
 ```
 +--------+  Add recovery cfg task  +-------+  run task  +----------+
@@ -1654,15 +1734,21 @@ Of these, the most simple one is to just wait for each addition/activation/remov
 
 Here, the "add recovery config" CN-Agent task consists of:
 
-- Either we'll send the recovery_token's details when we call the `POST /servers/:server_uuid/recovery_config` end-point, or we'll let the cn_agent know that it has to perform an HTTP request to `POST /pivtokens/:guid` authenticated with the `9e` key of the Yubikey attached to the CN in order to retrieve such information. Let's assume at first that the simplest path will be used and, in order to save the extra HTTP request for each one of the CN agents, we'll provide the information on the original HTTP request to CNAPI. Params: `recovery token`, `hash`, `PIV token guid`, `action` (`add|activate|...`).
-- The cn_agent will store then the values for the new recovery config and the new recovery token.
-- The cn_agent will refresh local sysinfo to include the information about the new config hash.
+- Either we'll send the recovery\_token's details when we call the `POST
+  /servers/:server_uuid/recovery_config` end-point, or we'll let the cn\_agent
+  know that it has to perform an HTTP request to `POST /pivtokens/:guid`
+  authenticated with the `9e` key of the Yubikey attached to the CN in order to
+  retrieve such information. Let's assume at first that the simplest path will
+  be used and, in order to save the extra HTTP request for each one of the CN
+  agents, we'll provide the information on the original HTTP request to CNAPI.
+  Params: `recovery token`, `hash`, `PIV token guid`, `action`
+  (`add|activate|...`).
+- The cn\_agent will store then the values for the new recovery config and the
+  new recovery token.
+- The cn\_agent will refresh local sysinfo to include the information about the
+  new config hash.
 - KBMAPI will wait for task completion.
 
-Drawbacks/Advantages regarding using changefeed pub/sub:
-
-- We need to block awaiting tasks completion while running the task from KBMAPI into multiple CNs. Given we want to run this task into a configurable number of CNs in parallel, we should provide some kind of `TASK_TIMEOUT` which will be fired, for example, when CNAPI _"thinks"_ that a server is running, but either the server isn't or cn-agent instance there is down. Failure into a single node shouldn't result into failure for all nodes, specially if it's a known failure like "node is down" or "cn-agent" is down. On these cases, we should still have the new recovery tokens created into KBMAPI or some other flag for later usage of a CN which, due to whatever reason, has been unable to complete the given recovery config task.
-- When a node hasn't been able to complete the requested task due to whatever the reason (node down, cn-agent down, task execution failure) we need to provide a mechanism for the node to automatically try to get the latest configuration during the next boot of cn-agent. On these cases, we can add a task to cn-agent's init (similar to the current sysinfo or status report ones), where the agent will perform a check against KBMAPI end-point for its own CN and verify that the local information is consistent with whatever is expected into KBMAPI and, in case it's not, initiate a process similar to the one run during the aforementioned process.
 
 ```
              HTTP Request /pivtokens/:cn_uuid/pin.
@@ -1679,10 +1765,14 @@ In case of differences, init a new |  update PIV token in KBMAPI      |
 "recovery config" related task.    |------->------>------>------->----+
 ```
 
-Note this task will be executed only when cn-agent detects that it's running at a server where EDAR is in use (encrypted zpool information, available from sysinfo).
+Note this task will be executed only when cn-agent detects that it's running at
+a server where EDAR is in use (encrypted zpool information, available from
+sysinfo).
 
-- This approach has no issues with a possible flow or concurrent requests to either CNAPI or KBMAPI from the different cn-agents, since the tasks will run in batches of configurable number of CNs and we'll wait for completion, using a known size queue.
-- Changefeed, either usig cn-agent or a custom kbm-agent means having publishers and subscribers keeping connections and processes up for something which shouldn't happen very frequently (recovery config modifications).
+This approach has no issues with a possible flow or concurrent requests to
+either CNAPI or KBMAPI from the different cn-agents, since the tasks will run in
+batches of configurable number of CNs and we'll wait for completion, using a
+known size queue.
 
 
 ## Development status (v1.x pending)
@@ -1694,5 +1784,8 @@ Note this task will be executed only when cn-agent detects that it's running at 
 
 
 ### Other action items
-- Provide access to a given PIV Token using CN's UUID in order to make possible for a cn-agent task to run on CN boot to perform a verify request against KBMAPI. Consider using `GET /pivtokens?uuids=[]` list of CN's UUIDs in a similar way to what CNAPI does for these searches.
+- Provide access to a given PIV Token using CN's UUID in order to make possible
+  for a cn-agent task to run on CN boot to perform a verify request against
+  KBMAPI. Consider using `GET /pivtokens?uuids=[]` list of CN's UUIDs in a
+  similar way to what CNAPI does for these searches.
 - Implement `PUT /tokens/:guid` to allow updates of some PIV Token CN UUID.

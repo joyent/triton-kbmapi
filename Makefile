@@ -27,7 +27,7 @@ FAUCET		:= node_modules/.bin/faucet
 #
 DOC_FILES	= index.md
 JSON_FILES	= package.json
-ESLINT_FILES	:= $(shell find lib client test -name '*.js') tools/bashstyle
+ESLINT_FILES	:= $(shell find lib client test -name '*.js')
 ESLINT		= ./node_modules/.bin/eslint
 
 
