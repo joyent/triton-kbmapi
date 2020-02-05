@@ -390,17 +390,10 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                     return;
                 }
 
-                const filter = '(|' + ctx.pendingTargets.map(function (t) {
-                    return util.format('(cn_uuid=%s)', t);
-                }).join('') + ')';
-
-                models.model.list({
+                models.pivtoken.lsByCn({
                     moray: self.moray,
                     log: self.log,
-                    bucket: models.pivtoken.bucket(),
-                    params: { filter: filter },
-                    validFields: ['guid', 'cn_uuid'],
-                    model: models.pivtoken.PIVToken
+                    cn_uuids: ctx.pendingTargets
                 }, function lsCb(lsErr, lsPivtokens) {
                     if (lsErr) {
                         next(lsErr);
@@ -411,11 +404,6 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                     lsPivtokens.forEach(function (piv) {
                         ctx.pivtokensByCnUuid[piv.params.cn_uuid] = piv;
                     });
-
-                    self.log.debug({
-                        filter: filter,
-                        pivtokens: ctx.pivtokensByCnUuid
-                    }, 'getPendingTargetsPIVTokens');
 
                     next();
                 });
