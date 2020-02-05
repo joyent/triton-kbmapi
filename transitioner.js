@@ -219,31 +219,33 @@ KbmApiTransitioner.prototype.prune = function prune() {
         const durationMs = self.config.historyDuration * 1000;
         const dateLimit = new Date(Date.now() - durationMs).toISOString();
 
-        const filter = util.format('(active_range:overlaps:=[,%s])', dateLimit);
-        const bucket = models.pivtoken_history.bucket().name;
+        const opts = {
+            moray: self.moray,
+            log: self.log
+        };
+        opts.filter = util.format('(active_range:overlaps:=[,%s])', dateLimit);
         // Delete from pivtoken-history:
-        self.moray.deleteMany(bucket, filter, function delCb(err) {
+        models.pivtoken_history.delMany(opts, function delCb(err) {
             if (err) {
                 self.log.error({
                     err: err,
-                    filter: filter
+                    filter: opts.filter
                 }, 'Error removing pivtoken history records');
             }
+
+            self.log.debug({
+                history_filter: opts.filter
+            }, 'Prune run.');
+
             // We'll delete old recovery tokens too:
-            const b = models.recovery_token.bucket().name;
-            const f = util.format('(expired<=%s)', dateLimit);
-            self.moray.deleteMany(b, f, function deCb(dErr) {
+            opts.filter = util.format('(expired<=%s)', dateLimit);
+            models.recovery_tokens.delMany(opts, function deCb(dErr) {
                 if (dErr) {
                     self.log.error({
                         err: dErr,
-                        filter: f
+                        filter: opts.filter
                     }, 'Error recovery token expired records');
                 }
-
-                self.log.debug({
-                    history_filter: filter,
-                    token_filter: f
-                }, 'Prune run.');
 
                 self.pruneTimeout = setTimeout(pruneHist,
                     self.config.pollInterval * 1000);
