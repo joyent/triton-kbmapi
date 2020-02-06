@@ -23,9 +23,9 @@ To build the project:
 
     make all
 
-### Using Yubikeys from COAL
+### Using YubiKeys from COAL
 
-In order to be able to use a Yubikey from COAL the following properties need
+In order to be able to use a YubiKey from COAL the following properties need
 to be added to the `.vmx` file of the VM we want to use it:
 
 ```
@@ -43,15 +43,15 @@ Once these lines have been added there will be two available options for a
 given pivy-tool:
 
 ```
-Shared Yubico Yubikey OTP+FIDO+CCID
-Yubico.com Yubikey OTP+FIDO+CCID
+Shared Yubico YubiKey OTP+FIDO+CCID
+Yubico.com YubiKey OTP+FIDO+CCID
 ```
 
-You need to pick the one without "Shared". It will say that the Yubikey will
+You need to pick the one without "Shared". It will say that the YubiKey will
 not be useable by the system during the time it's being user by the guest OS,
 which is exactly what we need.
 
-Also, note that by design a Yubikey needs to go through a factory reset in
+Also, note that by design a YubiKey needs to go through a factory reset in
 order to be useable as CN key for KBMAPI.
 
 You'll need to do something like lock both PIN and PUK before you can call

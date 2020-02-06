@@ -39,12 +39,12 @@ sdc_log_rotation_add kbmtr /var/svc/log/*kbmtr*.log 1g
 sdc_log_rotation_setup_end
 
 # Grab SDC application ssh keys to be used later by kbmctl
-SAPI_URL=$(/usr/bin/json -f /opt/smartdc/config-agent/etc/config.json sapi.url)
+SAPI_URL=$(json -f /opt/smartdc/config-agent/etc/config.json sapi.url)
 METADATA=$(curl -s $SAPI_URL/applications?name=sdc|json -H 0.metadata)
 mkdir -p /opt/smartdc/$role/etc
 # Create private/public key files
-/opt/local/bin/printf "$(echo ${METADATA} | json SDC_PUBLIC_KEY)" > /opt/smartdc/$role/etc/sdc_key.pub
-/opt/local/bin/printf "$(echo ${METADATA} | json SDC_PRIVATE_KEY)" > /opt/smartdc/$role/etc/sdc_key
+printf "%s" "$(echo ${METADATA} | json SDC_PUBLIC_KEY)" > /opt/smartdc/$role/etc/sdc_key.pub
+printf "%s" "$(echo ${METADATA} | json SDC_PRIVATE_KEY)" > /opt/smartdc/$role/etc/sdc_key
 
 # Add cmdline completion for `kbmctl`:
 /opt/smartdc/$role/build/node/bin/node /opt/smartdc/$role/bin/kbmctl completion >> /etc/bash/bash_completion.d/kbmctl

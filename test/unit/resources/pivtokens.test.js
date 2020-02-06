@@ -71,7 +71,7 @@ var TOKENS = [
 ];
 
 var OTHER_TOKEN = {
-    model: 'Yubico Yubikey 4',
+    model: 'Yubico YubiKey 4',
     serial: 6324923,
     cn_uuid: '00000000-0000-0000-0000-000000000002',
     guid: '1FFCFCBF0BE44E30975A550069B9B741',

@@ -13,15 +13,10 @@
 export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 set -o xtrace
 
-echo "Importing kbmapi SMF manifest"
+echo "Importing kbmapi SMF manifest and enabling service"
 /usr/sbin/svccfg import /opt/smartdc/kbmapi/smf/manifests/kbmapi.xml
 
-echo "Enabling kbmapi service"
-/usr/sbin/svcadm enable smartdc/application/kbmapi
-
-echo "Importing kbmtr SMF manifest"
+echo "Importing kbmtr SMF manifest and enabling service"
 /usr/sbin/svccfg import /opt/smartdc/kbmapi/smf/manifests/kbmtr.xml
 
-echo "Enabling kbmtr service"
-/usr/sbin/svcadm enable smartdc/application/kbmtr
 exit 0

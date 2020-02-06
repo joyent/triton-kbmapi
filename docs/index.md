@@ -53,7 +53,7 @@ enforced depending on `KBMAPI_REQUIRE_ATTESTATION`.
 
 Some PIV tokens have extensions that allow for attestation -- that is a method
 to show that a given certificate was created on the device and not imported.
-For Yubikeys, this is done by creating a special x509 certificate as detailed
+For YubiKeys, this is done by creating a special x509 certificate as detailed
 [here](https://developers.yubico.com/PIV/Introduction/PIV_attestation.html).
 
 If an operator wishes to require attestation, they must set the
@@ -66,7 +66,7 @@ be used with KBMAPI to a known set of PIV tokens.  To do so, an operator would
 set the SAPI parameter `KBMAPI_REQUIRE_TOKEN_PRELOAD` to `true`.  A command
 line tool (working name 'kbmctl') is then used by the operator to load the
 range of serial numbers into KBMAPI.  This is only supported for PIV tokens that
-support attestation (e.g. Yubikeys).  In other words, enabling
+support attestation (e.g. YubiKeys).  In other words, enabling
 `KBMAPI_REQUIRE_TOKEN_PRELOAD` requires `KBMAPI_REQUIRE_ATTESTATION` to also
 be enabled (but not necessarily vice versa).
 
@@ -75,7 +75,7 @@ are non-standard PIV extensions.  As such support for either feature will
 require kbmd / piv-tool and potentially kbmapi to support a particular device's
 implementation.  Similarly, enabling the feature requires the use of PIV tokens
 that implement the corresponding feature (attestation or a static serial number).
-The initial scope will only include support for Yubikey attestation and serial
+The initial scope will only include support for YubiKey attestation and serial
 numbers.
 
 In both cases, enforcement of the policy occurs during the provisioning
@@ -105,8 +105,8 @@ The PIV token object itself will be represented using JSON similar to:
 
 ```
 {
-    "model": "Yubico Yubikey 4",
-    "serial": 5213681,
+    "model": "Yubico YubiKey 4",
+    "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
     "pin": "123456",
@@ -182,8 +182,8 @@ same as the PIV token bucket:
 ```
 {
     "active_range": "[2019-01-01T00:00:00Z, 2019-03-01T05:06:07Z]",
-    "model": "Yubico Yubikey 4",
-    "serial": 5213681,
+    "model": "Yubico YubiKey 4",
+    "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
     "pin": "123456",
@@ -453,8 +453,8 @@ Accept-Version: ~1
 Accept: application/json
 
 {
-    "model": "Yubico Yubikey 4",
-    "serial": 5213681,
+    "model": "Yubico YubiKey 4",
+    "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
     "pin": "123456",
@@ -487,8 +487,8 @@ Response-Time: 42
 
 
 {
-    "model": "Yubico Yubikey 4",
-    "serial": 5213681,
+    "model": "Yubico YubiKey 4",
+    "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
     "pubkeys": {
@@ -550,7 +550,7 @@ Accept-Version: ~1
 Accept: application/json
 
 {
-    "model": "Yubico Yubikey 4",
+    "model": "Yubico YubiKey 4",
     "serial": "5213681",
     "cn_uuid": "99556402-3daf-cda2-ca0c-f93e48f4c5ad",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
@@ -635,7 +635,7 @@ Accept-Version: ~1
 Accept: application/json
 
 {
-    "model": "Yubico Yubikey 4",
+    "model": "Yubico YubiKey 4",
     "serial": "6324923",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "75CA077A14C5E45037D7A0740D5602A5",
@@ -668,7 +668,7 @@ Request-Id: 473bc7f4-05cf-4edb-9ef7-8b61cdd8e6b6
 Response-Time: 42
 
 {
-    "model": "Yubico Yubikey 4",
+    "model": "Yubico YubiKey 4",
     "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "75CA077A14C5E45037D7A0740D5602A5",
@@ -724,8 +724,8 @@ Response-Time: 55
 {
     [
         {
-            "model": "Yubico Yubikey 4",
-            "serial": 5213681,
+            "model": "Yubico YubiKey 4",
+            "serial": "5213681",
             "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
             "guid": "97496DD1C8F053DE7450CD854D9C95B4"
             "pubkeys": {
@@ -735,8 +735,8 @@ Response-Time: 55
             }
         },
         {
-            "model": "Yubico Yubikey 5",
-            "serial": 12345123,
+            "model": "Yubico YubiKey 5",
+            "serial": "12345123",
             "cn_uuid": "e9498ab2-d6d8-ca61-b908-fb9e2fea950a",
             "guid": "75CA077A14C5E45037D7A0740D5602A5",
             "pubkeys": {
@@ -780,7 +780,7 @@ Request-Id: de02d045-f8df-cf51-c424-a21a7984555b
 Response-Time: 55
 
 {
-   "model": "Yubico Yubikey 4",
+   "model": "Yubico YubiKey 4",
    "serial": "5213681",
    "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
    "guid": "97496DD1C8F053DE7450CD854D9C95B4"
@@ -827,7 +827,7 @@ Request-Id: 57e46450-ab5c-6c7e-93a5-d4e85cd0d6ef
 Response-Time: 1
 
 {
-    "model": "Yubico Yubikey 4",
+    "model": "Yubico YubiKey 4",
     "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
@@ -1308,7 +1308,7 @@ states for recovery configurations:
   +---------+   expire() +---------+         +-------------+        |  |
   | expired | <--------- | active  |  <----- |  activating | <------+  |
   +---------+            +---------+         +-------------+           |
-       |                     |                                         |        
+       |                     |                                         |
        | destroy()           |  deactivate()   +--------------+        |
        v                     +---------------> | deactivating |--------+
   +---------+                                  +--------------+
@@ -1337,7 +1337,7 @@ transitions. This allows:
 This persistent cache will store, for each transition, the following
 information:
 - The recovery configuration this transition belongs to.
-- List of CNs/PIV Tokens to take part in the transition process (probably will
+- List of CNs/PIV Tokens to take part in the transition process (it will
   be just the encrypted Compute Nodes which are running at the moment the
   transition has been started)
 - List of CNs where the transition has been completed and, in case of failure,
@@ -1345,8 +1345,8 @@ information:
 - List of `taskid` for each CN where the transition is in progress. These will
   match with `taskid` for cn-agent into each CN which can be accessed through
   CNAPI using either `GET /tasks/:task_id` or `GET /tasks/:task_id/wait`.
-- An indicator of wether or not the transition has been aborted.
-- An indicator of whether or not the transition is running. 
+- An indicator of whether or not the transition has been aborted.
+- An indicator of whether or not the transition is running.
 
 KBMAPI provides:
 - A process to orchestrate (run) the transitions (backed up by a SMF service)
@@ -1483,7 +1483,6 @@ is a JSON object like:
     "created": "ISO 8601 Date",
     ["activated": "ISO 8601 Date",]
     ["expired": "ISO 8601 Date",]
-    
 }
 ```
 
@@ -1566,7 +1565,7 @@ we'll initially have the following object with one associated recovery token:
 ```
 {
     "model": "Yubico YubiKey 4",
-    "serial": 5213681,
+    "serial": "5213681",
     "cn_uuid": "15966912-8fad-41cd-bd82-abe6468354b5",
     "guid": "97496DD1C8F053DE7450CD854D9C95B4",
     "pin": "123456",
@@ -1675,7 +1674,7 @@ and the KBMAPI's PIV token object will look as follows:
 }
 ```
 
-There is no need to keep more than the recovery tokens asociated with the
+There is no need to keep more than the recovery tokens associated with the
 currently active and staged configurations. Previous recovery tokens can be
 removed as part of the process of adding/activating a new one, given the
 information they provide will be useless at this point and in the future.
@@ -1737,7 +1736,7 @@ Here, the "add recovery config" CN-Agent task consists of:
 - Either we'll send the recovery\_token's details when we call the `POST
   /servers/:server_uuid/recovery_config` end-point, or we'll let the cn\_agent
   know that it has to perform an HTTP request to `POST /pivtokens/:guid`
-  authenticated with the `9e` key of the Yubikey attached to the CN in order to
+  authenticated with the `9e` key of the YubiKey attached to the CN in order to
   retrieve such information. Let's assume at first that the simplest path will
   be used and, in order to save the extra HTTP request for each one of the CN
   agents, we'll provide the information on the original HTTP request to CNAPI.
@@ -1753,7 +1752,7 @@ Here, the "add recovery config" CN-Agent task consists of:
 ```
              HTTP Request /pivtokens/:cn_uuid/pin.
              This is an HTTP Signature signed request
-+----------+   Tusing 9e key from Yubikey.                +--------+
++----------+   Tusing 9e key from YubiKey.                +--------+
 | cn-agent | -------------------------------------------> | KBMAPI |<-+
 +----------+ <------------------------------------------  +--------+  |
      |         PIV token including recovery tokens.                   |
