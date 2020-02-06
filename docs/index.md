@@ -1282,7 +1282,7 @@ states for recovery configurations:
   Nodes (or at least to all encrypted Compute Nodes available at the moment we
   made the previous HTTP request). Confirmation has been received by KBMAPI that
   the _"staging"_ process has been finished.
-* `active`: The request to activate the configuation across all the CNs where it
+* `active`: The request to activate the configuration across all the CNs where it
   has been previously staged has been sent to KBMAPI. The transition from
   `staged` to `active` will take some time. We need to keep track of the
   transition until it finishes.
