@@ -239,7 +239,7 @@ KbmApiTransitioner.prototype.prune = function prune() {
 
             // We'll delete old recovery tokens too:
             opts.filter = util.format('(expired<=%s)', dateLimit);
-            models.recovery_tokens.delMany(opts, function deCb(dErr) {
+            models.recovery_token.delMany(opts, function deCb(dErr) {
                 if (dErr) {
                     self.log.error({
                         err: dErr,
