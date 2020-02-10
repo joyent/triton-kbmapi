@@ -26,7 +26,6 @@ DOCTOC		:=node_modules/.bin/doctoc
 # Configuration used by Makefile.defs and Makefile.targ to generate
 # "check" and "docs" targets.
 #
-DOC_FILES	= index.md
 JSON_FILES	= package.json
 ESLINT_FILES	:= $(shell find lib client test -name '*.js')
 ESLINT		= ./node_modules/.bin/eslint
