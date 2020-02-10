@@ -20,12 +20,12 @@ NAME		:= kbmapi
 
 NYC	:= node_modules/.bin/nyc
 FAUCET		:= node_modules/.bin/faucet
+DOCTOC		:=node_modules/.bin/doctoc
 
 #
 # Configuration used by Makefile.defs and Makefile.targ to generate
 # "check" and "docs" targets.
 #
-DOC_FILES	= index.md
 JSON_FILES	= package.json
 ESLINT_FILES	:= $(shell find lib client test -name '*.js')
 ESLINT		= ./node_modules/.bin/eslint
@@ -83,10 +83,10 @@ all: $(SMF_MANIFESTS) | $(NPM_EXEC) sdc-scripts
 	$(NPM) install
 
 $(NYC): | $(NPM_EXEC)
-	$(NPM) install
+	$(NPM) install nyc
 
 $(FAUCET): | $(NPM_EXEC)
-	$(NPM) install
+	$(NPM) install faucet
 
 CLEAN_FILES += ./node_modules/tape
 
@@ -94,12 +94,20 @@ CLEAN_FILES += ./node_modules/tape
 test: $(NYC) $(FAUCET)
 	$(NPM) run coverage | $(FAUCET)
 
+$(DOCTOC):
+	$(NPM) install doctoc
+
+# Make a table of contents in Markdown docs that are setup to use it.  This
+# changes those files in-place, so one should do this before commit.
+docs:: | $(DOCTOC)
+	$(DOCTOC) --notitle --maxlevel 3 docs/README.md
+
 #
 # Packaging targets
 #
 
 .PHONY: release
-release: check all $(SMF_MANIFESTS)
+release: check all docs $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
 	@mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/$(NAME)
 	@mkdir -p $(RELSTAGEDIR)/site

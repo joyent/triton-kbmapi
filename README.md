@@ -98,19 +98,16 @@ KBMAPI install code:
 
 Then run the KBMAPI post-setup:
 
-    sdcadm post-setup kbmapi -C experimental
+    sdcadm post-setup kbmapi
 
 That should grab that most recently built KBMAPI image.  Once that completes,
 you should have a kbmapi0 zone on your HN.
-
-Note there will be no need to use `experimental` channel once the first KBMAPI
-release reaches master repository branch.
 
 ## Updates
 
 You should be able to update using sdcadm:
 
-    sdcadm update -C experimental kbmapi
+    sdcadm update kbmapi
 
 ## Uninstall
 
@@ -122,12 +119,8 @@ Use this at your own risk!
 
 ## Documentation
 
-See docs/index.md for a detailed API description. Note the API is on an early
-stage and subject to changes.
-
-To update the guidelines, edit "docs/index.md" and run `make docs`
-to update "docs/index.html". Works on either SmartOS or Mac OS X.
-
+To update docs, edit "docs/README.md" and run `make docs` if necessary in order
+to update the Table of Contents.
 
 ## License
 
