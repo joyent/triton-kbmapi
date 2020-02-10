@@ -1,7 +1,42 @@
-title: Key Backup and Management API (KBMAPI)
-apisections:
-markdown2extras: code-friendly
----
+# Key Backup and Management API (KBMAPI)
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+  - [PIV token object](#piv-token-object)
+  - [PIV token History](#piv-token-history)
+- [KBMAPI Endpoints](#kbmapi-endpoints)
+  - [CreatePivtoken (POST /pivtokens)](#createpivtoken-post-pivtokens)
+  - [UpdatePivtoken (PUT /pivtokens/:guid)](#updatepivtoken-put-pivtokensguid)
+  - [ReplacePivtoken (POST /pivtokens/:guid/replace)](#replacepivtoken-post-pivtokensguidreplace)
+  - [ListPivtokens (GET /pivtokens)](#listpivtokens-get-pivtokens)
+  - [GetToken (GET /pivtokens/:guid)](#gettoken-get-pivtokensguid)
+  - [GetTokenPin (GET /pivtokens/:guid/pin)](#gettokenpin-get-pivtokensguidpin)
+  - [DeletePivtoken (DELETE /pivtokens/:guid)](#deletepivtoken-delete-pivtokensguid)
+  - [Recovery Tokens](#recovery-tokens)
+  - [ListRecoveryTokens (GET /pivtokens/:guid/recovery-tokens)](#listrecoverytokens-get-pivtokensguidrecovery-tokens)
+  - [CreateRecoveryToken (POST /pivtokens/:guid/recovery-tokens)](#createrecoverytoken-post-pivtokensguidrecovery-tokens)
+  - [GetRecoveryToken (GET /pivtokens/:guid/recovery-tokens/:uuid)](#getrecoverytoken-get-pivtokensguidrecovery-tokensuuid)
+  - [UpdateRecoveryToken (PUT /pivtokens/:guid/recovery-tokens/:uuid)](#updaterecoverytoken-put-pivtokensguidrecovery-tokensuuid)
+  - [DeleteRecoveryToken (DELETE /pivtokens/:guid/recovery-tokens/:uuid)](#deleterecoverytoken-delete-pivtokensguidrecovery-tokensuuid)
+  - [Recovery Configuration(s)](#recovery-configurations)
+  - [Recovery configurations lifecycle](#recovery-configurations-lifecycle)
+  - [AddRecoveryConfig (POST /recovery_configs)](#addrecoveryconfig-post-recovery_configs)
+  - [WatchRecoveryConfigTransition (GET /recovery_configs/:uuid?action=watch&transition=\<name\>)](#watchrecoveryconfigtransition-get-recovery_configsuuidactionwatchtransition%5Cname%5C)
+  - [ListRecoveryConfigs (GET /recovery_configs)](#listrecoveryconfigs-get-recovery_configs)
+  - [ShowRecoveryConfig (GET /recovery_configs/:uuid)](#showrecoveryconfig-get-recovery_configsuuid)
+  - [StageRecoveryConfig (PUT /recovery_configs/:uuid?action=stage)](#stagerecoveryconfig-put-recovery_configsuuidactionstage)
+  - [UnstageRecoveryConfig (PUT /recovery_configs/:uuid?action=unstage)](#unstagerecoveryconfig-put-recovery_configsuuidactionunstage)
+  - [ActivateRecoveryConfig (PUT /recovery_configs/:uuid?action=activate)](#activaterecoveryconfig-put-recovery_configsuuidactionactivate)
+  - [DeactivateRecoveryConfig (PUT /recovery_configs/:uuid?action=deactivate)](#deactivaterecoveryconfig-put-recovery_configsuuidactiondeactivate)
+  - [RemoveRecoveryConfig (DELETE /recovery_configs/:uuid)](#removerecoveryconfig-delete-recovery_configsuuid)
+- [Inventory: Recovery Configs associated with PIV tokens](#inventory-recovery-configs-associated-with-piv-tokens)
+  - [Inventory Update](#inventory-update)
+  - [Development status (v1.x pending)](#development-status-v1x-pending)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <!--
     This Source Code Form is subject to the terms of the Mozilla Public
     License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +47,6 @@ markdown2extras: code-friendly
     Copyright 2020 Joyent, Inc.
 -->
 
-# Key Backup and Management API (KBMAPI)
 
 The goal of this is to provide an API that will be used to manage the
 pivtokens on Triton compute nodes containing encrypted zpools.
@@ -35,7 +69,7 @@ as described in [Provisioning and backups](https://github.com/joyent/rfd/blob/ma
 Second, it is also used by the CN as a shared secret with KBMAPI for the purposes
 of replacing the PIV token information of a CN with the data from a new PIV token.
 
-### kbmapi-history
+#### kbmapi-history
 
 When PIV tokens are deleted or reinitialized, the old PIV token data should be kept in a
 KBMAPI-maintained history.  This history maintains the PIV token data for an
@@ -82,7 +116,7 @@ In both cases, enforcement of the policy occurs during the provisioning
 process (i.e. at the time of a CreatePivtoken call).  Changes to either policy
 do _not_ affect existing PIV tokens in KBMAPI.
 
-#### PIV token object
+### PIV token object
 
 The PIV token data needs to be persistently stored (for hopefully obvious reasons).
 A moray bucket will be used to store the PIV token data. The JSON config of the
@@ -149,7 +183,7 @@ attestation      | No       | The attestation certificates for the corresponding
 Note that when provisioning a PIV token, if any of the optional fields are known,
 (e.g. `attestation` or `serial`) they should be supplied during provisioning.
 
-#### PIV token History
+### PIV token History
 
 As a failsafe measure, when a PIV token is deleted, the entry from the PIV token
 bucket is saved into a history bucket.  This bucket retains up to
@@ -279,7 +313,7 @@ replicating the audit trail to another system. It is recommended that the
 Triton log archiver or another log shipping tool is used to safely store the
 KBMAPI log file, /var/svc/log/smartdc-application-kbmapi:default.log.
 
-### Responses
+#### Responses
 
 All response objects are `application/json` encoded HTTP bodies.  In addition,
 all responses will have the following headers:
@@ -341,13 +375,13 @@ ResourceNotFound   | The resource was not found.
 UnknownError       | Something completely unexpected happened.
 
 
-### KBMAPI Endpoints
+## KBMAPI Endpoints
 
 In each case, each request should include an `Accept-Version` header indicating
 the version of the API being requested.  The initial value defined here shall
 be '1.0'.
 
-#### CreatePivtoken (POST /pivtokens)
+### CreatePivtoken (POST /pivtokens)
 
 Add a new initialized PIV token.  Included in the request should be an
 `Authorization` header with a method of 'Signature' with the date header
@@ -528,7 +562,7 @@ generate a new `recovery_token`.
 On all of these cases, the status code will be `200 Ok` instead of the
 `201 Created` used for the initial PIV token creation.
 
-#### UpdatePivtoken (PUT /pivtokens/:guid)
+### UpdatePivtoken (PUT /pivtokens/:guid)
 
 Update the current fields of a PIV token.  Currently, the only field that can be
 altered is the `cn_uuid` field (e.g. during a chassis swap).  If the new
@@ -583,7 +617,7 @@ Request-Id: 7e2562ba-731b-c91b-d7c6-90f2fd2d36a0
 Response-Time: 23
 ```
 
-#### ReplacePivtoken (POST /pivtokens/:guid/replace)
+### ReplacePivtoken (POST /pivtokens/:guid/replace)
 
 When a PIV token is no longer available (lost, damaged, accidentally reinitialized,
 etc.), a recovery must be performed.  This allows a new PIV token to replace the
@@ -689,7 +723,7 @@ Response-Time: 42
 Note that the location contains the guid of the _new_ PIV token.
 
 
-#### ListPivtokens (GET /pivtokens)
+### ListPivtokens (GET /pivtokens)
 
 Gets all provisioned PIV tokens.  The main requirement here is no
 sensitive information of a PIV token is returned in the output.
@@ -750,7 +784,7 @@ Response-Time: 55
 }
 ```
 
-#### GetToken (GET /pivtokens/:guid)
+### GetToken (GET /pivtokens/:guid)
 
 Gets the public info for a specific PIV token.  Only the public fields are
 returned.
@@ -792,7 +826,7 @@ Response-Time: 55
 }
 ```
 
-#### GetTokenPin (GET /pivtokens/:guid/pin)
+### GetTokenPin (GET /pivtokens/:guid/pin)
 
 Like GetToken, except it also includes the `pin`.  The `recovery_token` field
 is *not* returned.  This request must be authenticated using the 9E key of the
@@ -845,7 +879,7 @@ Response-Time: 1
 }
 ```
 
-#### DeletePivtoken (DELETE /pivtokens/:guid)
+### DeletePivtoken (DELETE /pivtokens/:guid)
 
 Deletes information about a PIV token.  This would be called during the
 decommission process of a CN.  The request is authenticated using the 9e
@@ -882,7 +916,7 @@ Note: alternatively, an operator can manually run `kbmctl` to delete an entry.
 
 A destroyed PIV token is automatically added to `token_history`.
 
-## Recovery Tokens
+### Recovery Tokens
 
 In order to simplify the management of recovery tokens from the CN's where
 recovery configurations are being staged or activated, convenience
@@ -903,7 +937,7 @@ tokens for a given PIV Token:
 - When a new recovery token is "activated", if there are any existing
   recovery tokens which were active, they will be immediately expired.
 
-#### ListRecoveryTokens (GET /pivtokens/:guid/recovery-tokens)
+### ListRecoveryTokens (GET /pivtokens/:guid/recovery-tokens)
 
 List all the existing recovery tokens for the given PIV Token `:guid`.
 
@@ -948,7 +982,7 @@ X-Request-Processing-Time: 24
     uuid: '03482e94-64b0-50d3-a858-23fdf3ff47f6' } ]
 ```
 
-#### CreateRecoveryToken (POST /pivtokens/:guid/recovery-tokens)
+### CreateRecoveryToken (POST /pivtokens/:guid/recovery-tokens)
 
 While the values for `token`, `uuid` (will be inferred from `token` otherwise),
 `created` and `recovery_configuration` can be provided, the expected usage is
@@ -998,7 +1032,7 @@ X-Request-Processing-Time: 24
   uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081' }
 ```
 
-#### GetRecoveryToken (GET /pivtokens/:guid/recovery-tokens/:uuid)
+### GetRecoveryToken (GET /pivtokens/:guid/recovery-tokens/:uuid)
 
 Get details for the given recovery token.
 
@@ -1051,7 +1085,7 @@ X-Request-Processing-Time: 33
   uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081' }
 ```
 
-#### UpdateRecoveryToken (PUT /pivtokens/:guid/recovery-tokens/:uuid)
+### UpdateRecoveryToken (PUT /pivtokens/:guid/recovery-tokens/:uuid)
 
 Modify the values for token's `staged`, `activated` and `expired`. Used to collect information
 regarding when a recovery token has been staged or activated into a CN, or when it has been
@@ -1101,7 +1135,7 @@ X-Request-Processing-Time: 35
   uuid: '2e618395-eb6f-59d6-a817-cf972b4ad081' }
 ```
 
-#### DeleteRecoveryToken (DELETE /pivtokens/:guid/recovery-tokens/:uuid)
+### DeleteRecoveryToken (DELETE /pivtokens/:guid/recovery-tokens/:uuid)
 
 Remove a recovery token. Note this is not possible if the recovery token is active or staged. It needs
 to be expired before.
@@ -1136,7 +1170,7 @@ X-Request-Processing-Time: 23
 ---
 ```
 
-## Recovery Configuration(s)
+### Recovery Configuration(s)
 
 We need to support the following features related to recovery config propagation:
 1. A mechanism to ensure that we do not push recovery config X until recovery
@@ -1406,7 +1440,7 @@ one of the CNs included in `wip` so we can check progress of such tasks using
 CNAPI. `locked_by` is the UUID of the `kbmtr` process which is currently
 orchestrating the transition.
 
-## End-points
+#### End-points
 
 KBMAPI needs end-points to support the following command:
 
@@ -1538,7 +1572,7 @@ will not change.
 
 Only a recovery configuration that isn't in use by any CN can be removed.
 
-### Other notes
+#### Other notes
 
 Note that we need at least one **recovery config** for everything to work
 properly. We'll need to figure out a way to provide such configuration either
@@ -1774,7 +1808,7 @@ batches of configurable number of CNs and we'll wait for completion, using a
 known size queue.
 
 
-## Development status (v1.x pending)
+### Development status (v1.x pending)
 
 - `token_serial` bucket needs to be created and end-point to access PIV tokens
   serial should be provided.
@@ -1782,7 +1816,7 @@ known size queue.
   functionalities implemented.
 
 
-### Other action items
+#### Other action items
 - Provide access to a given PIV Token using CN's UUID in order to make possible
   for a cn-agent task to run on CN boot to perform a verify request against
   KBMAPI. Consider using `GET /pivtokens?uuids=[]` list of CN's UUIDs in a
