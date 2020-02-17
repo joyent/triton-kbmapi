@@ -94,7 +94,7 @@ CLEAN_FILES += ./node_modules/tape
 test: $(NYC) $(FAUCET)
 	$(NPM) run coverage | $(FAUCET)
 
-$(DOCTOC):
+$(DOCTOC): | $(NPM_EXEC)
 	$(NPM) install doctoc
 
 # Make a table of contents in Markdown docs that are setup to use it.  This
