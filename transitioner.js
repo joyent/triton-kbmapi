@@ -627,13 +627,19 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
             // ctx.pendingTargets, including an update of ctx.currTr record
             // every time we're done with a batch.
             function processPendingTargets(ctx, next) {
+                var errs = ctx.currTr.params.errs || [];
+                // Cleanup empty (`{}`) values from this list:
+                if (errs.length) {
+                    errs = errs.filter(function dropEmptyObjects(anErr) {
+                        return (Object.keys(anErr).length !== 0);
+                    });
+                }
+                var tasks = ctx.currTr.params.taskids || [];
                 // Function to process a batch of N items
                 function doBatch(items, nextBatch) {
                     self.log.debug({
                         cns: items
                     }, 'doBatch');
-                    var errs = [];
-                    var tasks = [];
                     vasync.forEachParallel({
                         inputs: items,
                         // Function to process one of the items (CN)
@@ -724,16 +730,11 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                             }, 'Unexpected batch error');
                         }
                         var val = {
-                            taskids: (ctx.currTr.params.taskids || [])
-                                .concat(tasks),
+                            taskids: tasks,
                             completed: (ctx.currTr.params.completed || [])
-                            .concat(items)
+                            .concat(items),
+                            errs: errs
                         };
-
-                        if (errs) {
-                            val.errs = errs.concat(
-                                ctx.currTr.params.errs || []);
-                        }
 
                         self.log.debug({
                             val: val
@@ -807,11 +808,20 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                     next();
                     return;
                 }
-
+                var trErrs = ctx.currTr.params.errs;
                 // Do not change recovery configuration state if we had errors:
-                if (ctx.currTr.params.errs && ctx.currTr.params.errs.length) {
-                    next();
-                    return;
+                if (trErrs && trErrs.length) {
+                    trErrs = trErrs.filter(function dropEmptyObjects(anErr) {
+                        return (Object.keys(anErr).length !== 0);
+                    });
+                    if (trErrs.length) {
+                        self.log.info({
+                            errors: trErrs
+                        }, 'not modifying recovery configuration state' +
+                            'due to existing errors');
+                        next();
+                        return;
+                    }
                 }
 
                 var val = {};

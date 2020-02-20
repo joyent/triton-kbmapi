@@ -524,7 +524,6 @@ test('Initial setup', function tInitialSetup(suite) {
             path: util.format('/pivtokens/%s/recovery-tokens', TOKENS[0].guid)
         }, {
             zpool_recovery: {
-                staged: ANOTHER_CONFIG.uuid,
                 active: ANOTHER_CONFIG.uuid
             },
             recovery_token: REC_TOKEN.uuid

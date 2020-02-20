@@ -274,6 +274,34 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    suite.test('Stage already staged transition', function (t) {
+        CLIENT.updateRecoveryConfiguration({
+            uuid: RECOVERY_CONFIG.uuid,
+            action: 'stage'
+        }, function (err, body, res) {
+            t.ifError(err, 'stage error');
+            t.ok(Object.keys(body).length === 0, 'no transition response body');
+            t.equal(204, res.statusCode, 'stage status code');
+            t.equal(
+                util.format(
+                    '/recovery-configurations/%s?action=watch&transition=stage',
+                    RECOVERY_CONFIG.uuid
+                ),
+                res.headers['location'],
+                'location header'
+            );
+            t.end();
+        });
+    });
+
+    suite.test('Run stage transition again', function (t) {
+        TRANSITIONER.runTransition(function runCb(runErr, runRes) {
+            t.ifError(runErr, 'transitioner run error');
+            t.equal(runRes.length, 0, 'transitioner run results');
+            t.end();
+        });
+    });
+
     suite.test('Activate single PIVToken', function doActivateOne(t) {
         CLIENT.updateRecoveryConfiguration({
             uuid: RECOVERY_CONFIG.uuid,
