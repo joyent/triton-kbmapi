@@ -60,7 +60,7 @@ function requestSigner(req) {
     if (SIGNER === 'httpSignature') {
         if (PRIVTOKEN) {
             httpSignature.signRequest(req, {
-                key: PRIVTOKEN,
+                key: Buffer.from(PRIVTOKEN, 'hex'),
                 keyId: 'recovery_token',
                 algorithm: 'hmac-sha256'
             });
