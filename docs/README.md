@@ -172,7 +172,7 @@ serial           | No       | The serial number of the PIV token (if available).
 cn\_uuid         | Yes      | The UUID of the compute node that contains this PIV token.
 guid             | Yes      | The GUID of the provisioned PIV token.
 pin              | Yes      | The pin of the provisioned PIV token.
-recovery\_tokens | Yes      | An array of recovery tokens.  Used to recover the encryption keys of a zpool protected by this PIV token.  Also used when replacing a PIV token.  When the recovery configuration is updated, a new recovery token is generated and added to the list.
+recovery\_tokens | Yes      | An array of recovery tokens.  Used to recover the encryption keys of a zpool protected by this PIV token.  Also used when replacing a PIV token.  When the recovery configuration is updated, a new recovery token is generated and added to the list. Note that the `token` member is base64 encoded.
 pubkeys          | Yes      | A JSON object containing the _public_ keys of the PIV token.
 pubkeys.9a       | Yes      | The public key used for authentication after the PIV token has been unlocked.
 pubkeys.9d       | Yes      | The public key used for encryption after the PIV token has been unlocked.
@@ -467,7 +467,7 @@ Recovery Tokens may include some or all of the following fields:
 ------------------------|--------------|-----------------
 uuid                    | Yes          | The UUID of the provisioned Recovery token.
 pivtoken                | Yes          | The GUID of the provisioned PIV token.
-token                   | Yes          | The encrypted recovery token which could be used for HMAC auth in case the PIVToken is not available.
+token                   | Yes          | The encrypted recovery token which could be used for HMAC auth in case the PIVToken is not available. Note that this value is `base64` encoded. It should be properly decoded before using it for HMAC auth.
 recovery\_configuration | Yes          | The UUID of the recovery configuration template to be used with the token.
 template                | No           | The template associated with the aforementioned recovery configuration. Included when a new recovery token is created in order to save some extra HTTP requests to /recovery-configurations. (As a rule regarding when to expect this field to be present: only for HTTP POST requests).
 created                 | Yes          | When this recovery token was created.
@@ -989,6 +989,8 @@ While the values for `token`, `uuid` (will be inferred from `token` otherwise),
 to just request the creation of a new recovery token which will use the currently
 active recovery configuration.
 
+Note that, when provided, the value for `token` is expected to be `base64` encoded.
+
 When creating new tokens for later staging a new recovery configuration into a CN
 where a token using the currently active recovery configuration, the new (not yet
 active) `recovery_configuration` should be provided.
@@ -1041,7 +1043,7 @@ Get details for the given recovery token.
 pivtoken                | PIV token GUID
 uuid                    | UUID of the recovery token
 recovery\_configuration | UUID of the recovery configuration associated with the recovery token
-token                   | The proper recovery token string
+token                   | The proper recovery token string, base64 encoded.
 created                 | When the token was created
 staged                  | Timestamp when the token was staged into the PIV token's associated CN
 activated               | Timestamp for when the token was activated
