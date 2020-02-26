@@ -617,7 +617,7 @@ Request-Id: 7e2562ba-731b-c91b-d7c6-90f2fd2d36a0
 Response-Time: 23
 ```
 
-### ReplacePivtoken (POST /pivtokens/:guid/replace)
+### ReplacePivtoken (POST /pivtokens/:replaced\_guid/replace)
 
 When a PIV token is no longer available (lost, damaged, accidentally reinitialized,
 etc.), a recovery must be performed.  This allows a new PIV token to replace the
@@ -630,7 +630,8 @@ that are sufficiently old to no longer be considered valid (even when accounting
 for propagation delays).
 
 The CN submits a ReplacePivtoken request to replace the unavailable PIV token
-with a new PIV token.  The `:guid` parameter is the guid of the unavailable PIV token.
+with a new PIV token.  The `:replaced_guid` parameter is the guid of the
+unavailable PIV token.
 The data included in the request is identical to that of a CreatePivtoken request.
 The major difference is that instead of using a PIV token's 9e key to sign the date
 field, the decrypted `recovery_token` value is used as the signing key.
@@ -644,12 +645,13 @@ a `404 Not Found` response.
 If the request fails to authenticate, a `401 Unauthorized` error
 is returned.
 
-If all the checks succeed, the information from the old PIV token (`:guid`) is
-moved to a history entry for that PIV token. Any subsequent requests to
-`/pivtokens/:guid` should either return a `404 Not found` reply. Note we do
-not try to return a `301 Moved Permanently` response with a new PIV token
-location because we could have a request to a PIV token which has already been
-replaced by another, which in turn has been replaced by another one ...
+If all the checks succeed, the information from the old PIV token
+(`:replaced_guid`) is moved to a history entry for that PIV token.
+Any subsequent requests to `/pivtokens/:replaced_guid` should either return a
+`404 Not found` reply. Note we do not try to return a `301 Moved Permanently`
+response with a new PIV token location because we could have a request to a PIV
+token which has already been replaced by another, which in turn has been
+replaced by another one ...
 
 The newly created PIV token will then be returned, together with the proper
 `Location` header (`/pivtokens/:new_guid`). In case of network/retry issues,
