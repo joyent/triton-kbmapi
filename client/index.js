@@ -178,9 +178,7 @@ KBMAPI.prototype.replaceToken = function replaceToken(opts, cb) {
 
     var reqOpts = Object.assign(opts, {
         path: '/pivtokens/' + opts.guid + '/replace',
-        data: {
-            token: opts.token
-        },
+        data: opts.token,
         method: 'POST',
         authRequired: true,
         privtoken: opts.recovery_token
