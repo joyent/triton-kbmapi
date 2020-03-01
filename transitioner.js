@@ -855,6 +855,13 @@ KbmApiTransitioner.prototype.runTransition = function runTransition(cb) {
                     }
                     next();
                 });
+            },
+
+            function expireUnusedRecoveryConfigs(_ctx, next) {
+                models.expireUnusedRecoveryConfigs({
+                    moray: self.moray,
+                    log: self.log
+                }, next);
             }
         ]
     }, function pipeCb(pipeErr, pipeRes) {

@@ -30,6 +30,7 @@ const subs = [
     ['recovery cancel'],
     ['recovery remove', 'recovery delete', 'recovery rm', 'recovery del'],
     ['recovery add', 'recovery create'],
+    ['recovery expire'],
     ['pivtoken', 'pivtokens'],
     ['pivtoken list', 'pivtoken ls'],
     ['pivtoken add', 'pivtoken create'],

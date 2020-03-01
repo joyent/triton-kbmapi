@@ -10,7 +10,7 @@
  */
 
 /*
- * Test `kbmctl pivtoken ...` subcommands
+ * Test `kbmctl recovery ...` subcommands
  */
 
 'use strict';
@@ -28,12 +28,15 @@ const h = require('./helpers');
 const common = require('../lib/common');
 const helpers = require('../unit/helpers');
 const mod_server = require('../lib/server');
-
+const mocks = require('../lib/mocks');
 const models = require('../../lib/models');
+
+const KbmApiTransitioner = require('../../transitioner').KbmApiTransitioner;
 
 var KBMAPI;
 var MORAY;
 var CLIENT;
+var TRANSITIONER;
 var REC_CFG;
 var ANOTHER_REC_CFG;
 var PIVTOKENS_CACHE = [];
@@ -61,6 +64,23 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    suite.test('Create transitioner', function (t) {
+        TRANSITIONER = new KbmApiTransitioner({
+            moray: MORAY,
+            cnapi: new mocks.cnapi(MORAY),
+            log: KBMAPI.log,
+            config: {
+                instanceUuid: 'dc7cdc64-f03d-4e74-b710-0e9f174918e9'
+            }
+        });
+        TRANSITIONER.on('initialized', function started() {
+            // Run transitions.
+            // Then stop the transitioner until something else makes it
+            // run again.
+            t.end();
+        });
+        TRANSITIONER.start();
+    });
     suite.test('Create Recovery Configuration', function (t) {
         h.kbmctl([
             'recovery',
@@ -399,12 +419,107 @@ test('Initial setup', function tInitialSetup(suite) {
         });
     });
 
+    // This should do nothing due to the same reason
+    suite.test('Expire Unused Recovery Configurations', function (t) {
+        h.kbmctl([
+            'recovery',
+            'expire',
+            '--force'
+        ], function (err, stdout, stderr) {
+            if (common.ifErr(t, err, 'expire recovery')) {
+                t.end();
+                return;
+            }
+            t.equal(stderr, '', 'empty stderr');
+            t.ok(stdout, 'expected cmd stdout');
+            t.end();
+        });
+    });
+
+
+    suite.test('Activate Recovery Configuration', function (t) {
+        h.kbmctl([
+            'recovery',
+            'activate',
+            ANOTHER_REC_CFG.uuid
+        ], function (err, stdout, stderr) {
+            if (common.ifErr(t, err, 'stage recovery')) {
+                t.end();
+                return;
+            }
+            t.equal(stderr, '', 'empty stderr');
+            t.ok(stdout, 'expected cmd stdout');
+            t.end();
+        });
+    });
+
+    suite.test('Run activate transition', function (t) {
+        TRANSITIONER.runTransition(function runCb(runErr, pendingTrs) {
+            t.ifError(runErr, 'unexpected transitioner err');
+            t.ok(Array.isArray(pendingTrs),
+                'should not be pending transtions');
+            t.equal(pendingTrs.length, 0, 'should not be pending transitions');
+            t.end();
+        });
+    });
+
+
+    suite.test('List Recovery After Activation', function (t) {
+        h.kbmctl([
+            'recovery',
+            'list',
+            '-l',
+            '-H'
+        ], function (err, stdout, stderr) {
+            if (common.ifErr(t, err, 'list recovery')) {
+                t.end();
+                return;
+            }
+            t.equal(stderr, '', 'empty stderr');
+            t.ok(stdout, 'expected cmd stdout');
+            var lines = stdout.trim().split('\n');
+            t.equal(2, lines.length, 'Expected list output');
+            lines.forEach(function (line) {
+                line = line.split(/\s+/);
+                if (line[0] === REC_CFG.uuid) {
+                    t.equal(0, Number(line[1]), 'expected staged tokens');
+                    t.equal(0, Number(line[2]), 'expected active tokens');
+                    t.equal('expired', line[3], 'recovery config is expired');
+                } else {
+                    t.equal(PIVTOKENS_CACHE.length, Number(line[1]),
+                        'expected staged tokens');
+                    t.equal(PIVTOKENS_CACHE.length, Number(line[2]),
+                        'expected active tokens');
+                    t.equal('active', line[3], 'recovery config is active');
+                }
+            });
+            t.end();
+        });
+    });
+
+
+    suite.test('Remove Expired Recovery Configuration', function (t) {
+        h.kbmctl([
+            'recovery',
+            'remove',
+            REC_CFG.uuid,
+            '--force'
+        ], function (err, stdout, stderr) {
+            t.ifError(err, 'remove expired recovery config');
+            t.notEqual(stdout, '', 'expected cmd stdout');
+            t.equal(stderr, '', 'empty cmd stderr');
+            t.end();
+        });
+    });
+
     suite.end();
 });
 
 test('Stop server', function closeServers(t) {
     KBMAPI.server.close();
-    mod_server.close(t);
+    TRANSITIONER.stop(function () {
+        mod_server.close(t);
+    });
 });
 
 // vim: set softtabstop=4 shiftwidth=4:
