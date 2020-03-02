@@ -494,6 +494,30 @@ function deleteRecoveryConfiguration(opts, cb) {
     });
 };
 
+
+/**
+ * Expires recovery configurations not used any more
+ *
+ * @param {Object} opts object containing any special request opts
+ * @param {Function} cb: of the form f(err, res)
+ */
+KBMAPI.prototype.expireRecoveryConfigurations =
+function expireRecoveryConfigurations(opts, cb) {
+    assert.object(opts, 'opts');
+    assert.func(cb, 'cb');
+
+
+    var reqOpts = Object.assign(opts, {
+        path: '/recovery-configurations',
+        method: 'PUT',
+        authRequired: false
+    });
+
+    this._request(reqOpts, function reqCb(err, req, res, body) {
+        cb(err, body, res);
+    });
+};
+
 /**
  * List all recovery configurations
  *
