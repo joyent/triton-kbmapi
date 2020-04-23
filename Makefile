@@ -42,8 +42,9 @@ SMF_MANIFESTS_IN	= smf/manifests/kbmapi.xml.in smf/manifests/kbmtr.xml.in
 #
 
 ifeq ($(shell uname -s),SunOS)
-	NODE_PREBUILT_VERSION =	v6.17.0
-	NODE_PREBUILT_IMAGE = 7f4d80b4-9d70-11e9-9388-6b41834cbeeb
+	NODE_PREBUILT_VERSION =	v6.17.1
+	# minimal-64-lts@19.4.0
+	NODE_PREBUILT_IMAGE = 5417ab20-3156-11ea-8b19-2b66f5e7a439
 	NODE_PREBUILT_TAG := zone64
 else
 	NPM=npm
@@ -67,8 +68,8 @@ ROOT		:= $(shell pwd)
 RELEASE_TARBALL	:= $(NAME)-pkg-$(STAMP).tar.gz
 RELSTAGEDIR	:= /tmp/$(NAME)-$(STAMP)
 
-# triton-origin-x86_64-19.2.0
-BASE_IMAGE_UUID = a0d5f456-ba0f-4b13-bfdc-5e9323837ca7
+# triton-origin-x86_64-19.4.0
+BASE_IMAGE_UUID = 59ba2e5e-976f-4e09-8aac-a4a7ef0395f5
 BUILDIMAGE_NAME = $(NAME)
 BUILDIMAGE_DESC = Triton Key Backup and Management
 AGENTS		= config registrar

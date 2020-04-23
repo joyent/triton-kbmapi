@@ -9,7 +9,7 @@
 - [KBMAPI Endpoints](#kbmapi-endpoints)
   - [CreatePivtoken (POST /pivtokens)](#createpivtoken-post-pivtokens)
   - [UpdatePivtoken (PUT /pivtokens/:guid)](#updatepivtoken-put-pivtokensguid)
-  - [ReplacePivtoken (POST /pivtokens/:guid/replace)](#replacepivtoken-post-pivtokensguidreplace)
+  - [ReplacePivtoken (POST /pivtokens/:replaced\_guid/replace)](#replacepivtoken-post-pivtokensreplaced%5C_guidreplace)
   - [ListPivtokens (GET /pivtokens)](#listpivtokens-get-pivtokens)
   - [GetToken (GET /pivtokens/:guid)](#gettoken-get-pivtokensguid)
   - [GetTokenPin (GET /pivtokens/:guid/pin)](#gettokenpin-get-pivtokensguidpin)
